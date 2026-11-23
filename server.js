@@ -73,7 +73,7 @@ function drawCvSection(doc, heading, value, accent, splitInline = false, bodySiz
 
 
 function drawTenancyAgreement(doc,d,accent,fontSize,headingSize){
- const left=58,right=537,width=right-left,body=fontSize;
+ const left=doc.page.margins.left,right=doc.page.width-doc.page.margins.right,width=right-left,body=fontSize;
  const field=(label,value)=>{doc.font("Times-Roman").fontSize(body).fillColor("#111111").text(label+" "+(value||"________________________________"),{width,lineGap:3});doc.moveDown(0.65);};
  doc.font("Times-Bold").fontSize(headingSize+4).fillColor(accent).text("TENANCY AGREEMENT",{align:"center"});doc.moveDown(2);
  doc.font("Times-Roman").fontSize(body).fillColor("#111111").text("This Tenancy Agreement is made this _____ day of __________, 20____, between "+(d.landlord||"____________________________")+", hereinafter referred to as the Landlord, and "+(d.tenant||"____________________________")+", hereinafter referred to as the Tenant.",{width,lineGap:3,align:"justify"});doc.moveDown(1);
@@ -93,9 +93,9 @@ function drawTenancyAgreement(doc,d,accent,fontSize,headingSize){
    doc.text(clauseText,opts);
    doc.moveDown(1.2);
  });
- if(doc.y>620)doc.addPage();doc.moveDown(1.5);
+ doc.moveDown(1.5);
  doc.font("Times-Roman").fontSize(body).fillColor("#111111").text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",{width,lineGap:3,align:"justify"});doc.moveDown(4);
- const y=doc.y,row1=54,row2=88,half=width/2;doc.rect(left,y,half,row1+row2).strokeColor("#777777").lineWidth(.8).stroke();doc.moveTo(left+half,y).lineTo(left+half,y+row1+row2).stroke();doc.moveTo(left,y+row1).lineTo(right,y+row1).stroke();
+ const yNeeded=54+88+18;const pageBottom=doc.page.height-doc.page.margins.bottom;if(doc.y+yNeeded>pageBottom)doc.addPage();const y=doc.y,row1=54,row2=88,half=width/2;doc.rect(left,y,half,row1+row2).strokeColor("#777777").lineWidth(.8).stroke();doc.moveTo(left+half,y).lineTo(left+half,y+row1+row2).stroke();doc.moveTo(left,y+row1).lineTo(right,y+row1).stroke();
  doc.font("Times-Roman").fontSize(10).fillColor("#111111").text("........................................................\nNAME OF LANDLADY\nNUMBER",left+7,y+8,{width:half-14,lineGap:2}).text("........................................................\nNAME OF TENANT\nNUMBER",left+half+7,y+8,{width:half-14,lineGap:2});
  doc.font("Times-Bold").fontSize(10).text("WITNESSES",left+7,y+row1+8);doc.font("Times-Roman").fontSize(9.5).text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)",left+7,y+row1+34,{width:half-14,lineGap:2}).text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)",left+half+7,y+row1+34,{width:half-14,lineGap:2});
 }
@@ -103,7 +103,7 @@ function drawTenancyAgreement(doc,d,accent,fontSize,headingSize){
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
     const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
-    const doc = new PDFDocument({ size: "A4", margins: { top: 54, bottom: 54, left: 58, right: 58 } });
+    const doc = new PDFDocument({ size: "A4", margins: { top: 72, bottom: 72, left: 72, right: 72 } });
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
     if (watermark) {
