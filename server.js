@@ -35,7 +35,7 @@ function makePdf(order) {
     const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
     const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
     const accent=palette[designNumber-1];
-    const photoMatch=typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
+    const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
     doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
     doc.moveDown(0.35);
