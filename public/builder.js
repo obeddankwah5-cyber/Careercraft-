@@ -20,10 +20,16 @@ $("templateSelect").addEventListener("change",()=>{template=$("templateSelect").
 const params=new URLSearchParams(location.search),wanted=params.get("template");templateList();if(wanted&&/^(cv|letter|tenancy)-(0[1-9]|1[0-9]|20)$/.test(wanted)){template=wanted;if(typeKey()!==wanted.split("-")[0])$("type").value=wanted.startsWith("cv-")?"cv":wanted.startsWith("letter-")?"letter":"tenancy";templateList();$("templateSelect").value=template;stylePreview()}
 
 $("closePdfPreview").addEventListener("click",()=>{ $("pdfPreviewModal").hidden=true; $("previewCanvas").innerHTML=""; });
-$("previewPdf").onclick=()=>{
+$("previewPdf").onclick=async()=>{
   if(!v("fullName")){$("error").textContent="Enter your name before previewing.";return}
   $("error").textContent="";
-  const canvas=$("previewCanvas");canvas.innerHTML="";
+  const button=$("previewPdf"),canvas=$("previewCanvas");
+  button.disabled=true;button.textContent="Preparing your document preview…";
+  canvas.innerHTML='<div style="min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#34264b;font:600 15px Arial,sans-serif"><div style="width:34px;height:34px;border:4px solid #e7def2;border-top-color:#6943a8;border-radius:50%;animation:ccSpin .8s linear infinite"></div>Preparing your document preview…</div>';
+  $("pdfPreviewModal").hidden=false;
+  if(!document.getElementById("ccPreviewSpinnerStyle")){const style=document.createElement("style");style.id="ccPreviewSpinnerStyle";style.textContent="@keyframes ccSpin{to{transform:rotate(360deg)}}";document.head.appendChild(style)}
+  await new Promise(resolve=>setTimeout(resolve,3000));
+  canvas.innerHTML="";
   const page=$("paperPreview").cloneNode(true);page.removeAttribute("id");
   page.style.width="100%";page.style.maxWidth="794px";page.style.minHeight="1050px";page.style.margin="0 auto";page.style.boxSizing="border-box";
   const wrap=document.createElement("div");
@@ -40,7 +46,7 @@ $("previewPdf").onclick=()=>{
   }
   wrap.appendChild(watermark);
   canvas.appendChild(wrap);
-  $("pdfPreviewModal").hidden=false;
+  button.disabled=false;button.innerHTML='Preview your document <span style="float:right">Open temporary PDF preview ↗</span>';
 };
 
 $("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
