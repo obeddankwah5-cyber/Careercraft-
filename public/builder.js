@@ -18,36 +18,51 @@ let a=t==="cv"?[["PROFILE",cvSummary],["EXPERIENCE",v("experience")],["EDUCATION
 $("pv").innerHTML=a.map(([h,x])=>"<h4 style='color:var(--template-accent)'>"+h+"</h4><p>"+(esc(x)||"Your details will appear here.")+"</p>").join("")}
 
 function sentenceList(value){return value.split(/\n+/).map(x=>x.trim()).filter(Boolean).join("; ")}
+function suggestedSkills(role){
+ const r=(role||"").toLowerCase();
+ if(/admin|secretary|office|reception/.test(r)) return ["Communication","Organisation","Time management","Record keeping","Customer service","Computer literacy"];
+ if(/teacher|education|tutor/.test(r)) return ["Communication","Lesson preparation","Classroom support","Patience","Organisation","Learner engagement"];
+ if(/sales|marketing|business development/.test(r)) return ["Customer relations","Communication","Product presentation","Negotiation","Teamwork","Goal orientation"];
+ if(/account|finance|cashier|bank/.test(r)) return ["Numeracy","Attention to detail","Record keeping","Confidentiality","Computer literacy","Customer service"];
+ if(/driver|delivery|logistic|warehouse/.test(r)) return ["Time management","Safety awareness","Route planning","Reliability","Teamwork","Record keeping"];
+ if(/nurse|health|care|clinic/.test(r)) return ["Communication","Compassionate service","Attention to detail","Teamwork","Confidentiality","Organisation"];
+ if(/it|software|computer|technician|developer/.test(r)) return ["Problem solving","Technical support","Troubleshooting","Communication","Teamwork","Continuous learning"];
+ return ["Communication","Teamwork","Problem solving","Time management","Organisation","Willingness to learn"];
+}
 function generateDocument(){
-  const kind=typeKey(),name=v("fullName"),role=v("targetRole"),experience=sentenceList(v("experience")),education=sentenceList(v("education")),skills=sentenceList(v("skills"));
-  if(!name){$("error").textContent="Please enter your full name first.";return}
-  if(kind==="cv"){
-    if(!experience&&!education&&!skills){$("error").textContent="Add at least your work experience, education or skills so the CV can be written accurately.";return}
-    const intro=role?name+" is a candidate for "+role+" opportunities.":"Motivated professional with a background supported by the experience and qualifications listed below.";
-    $("summary").value=[intro,experience?"Brings experience in "+experience+".":"",education?"Educational background includes "+education+".":"",skills?"Key strengths include "+skills+".":""].filter(Boolean).join(" ");
-    $("experience").value=v("experience").split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>x.startsWith("•")?x:"• "+x).join("\n");
-    $("skills").value=v("skills").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean).join(" · ");
-  }else if(kind==="letter"){
-    const company=v("recipient")||"the organisation",subject=v("subject")||("APPLICATION FOR "+(role||"EMPLOYMENT").toUpperCase());
-    const reason=v("letterReason"),relevant=v("letterExperience")||v("experience"),highlights=v("letterSkills")||v("skills");
-    if(!role&&!reason&&!relevant&&!highlights){$("error").textContent="Add the job title, your reason for applying, experience or skills so the letter can be written accurately.";return}
-    $("subject").value=subject;
-    const paragraphs=[
-      "I am writing to apply for the "+(role||"available")+" position at "+company+". I am interested in this opportunity because "+(reason||"I would welcome the opportunity to contribute my abilities and continue developing professionally")+".",
-      relevant?"My relevant background includes "+relevant+".":"",
-      highlights?"I can also offer skills in "+highlights+".":"",
-      education?"My educational background includes "+education+".":"",
-      "Thank you for considering my application. I would appreciate the opportunity to discuss how my background and abilities may meet your needs."
-    ].filter(Boolean);
-    $("body").value=paragraphs.join("\n\n");
-  }else{
-    const landlord=v("landlord"),tenant=v("tenant"),property=v("propertyAddress"),rent=v("rent"),period=v("period");
-    if(!landlord||!tenant||!property||!rent||!period){$("error").textContent="Please provide the landlord, tenant, property address, rent and tenancy period first.";return}
-    if(!v("terms"))$("terms").value="The tenant agrees to pay the stated rent as agreed by both parties. The tenant will keep the property reasonably clean and report damage or necessary repairs to the landlord. The landlord and tenant should agree in writing on any changes to this agreement. Any deposit, utility responsibility, notice period and maintenance arrangements should be confirmed by both parties before signing.";
-  }
-  $("error").textContent="";
-  render();
-  $("generate").textContent="Regenerate document ↻";
+ const kind=typeKey(),name=v("fullName"),role=v("targetRole"),company=v("recipient")||"the organisation";
+ const experience=sentenceList(v("experience")),education=sentenceList(v("education")),skills=sentenceList(v("skills"));
+ if(!name){$("error").textContent="Please enter your full name first.";return}
+ if(kind==="cv"){
+   const focus=role||"the position you are applying for";
+   const profile=[name+" is presenting an application for "+focus+".",experience?"Relevant background includes "+experience+".":"The candidate is encouraged to add employment, internship, volunteer or practical project experience where applicable.",education?"Education and training include "+education+".":"Education, training and relevant certificates can be added to strengthen this section.",skills?"Relevant skills include "+skills+".":"Suggested transferable strengths include "+suggestedSkills(role).join(", ")+". Please keep only the skills that genuinely describe you."].join(" ");
+   $("summary").value=profile;
+   if(!skills) $("skills").value=suggestedSkills(role).join(" · ");
+   if(!v("experience")) $("experience").value="Add any relevant work, internship, volunteering, apprenticeship or personal project experience here. If you have no work experience yet, describe practical projects, responsibilities or activities that demonstrate your abilities.";
+ }else if(kind==="letter"){
+   const reason=v("letterReason")||("I am interested in this opportunity because it matches my career goals and offers an opportunity to contribute, learn and grow professionally");
+   const relevant=v("letterExperience")||experience;
+   const highlights=v("letterSkills")||skills||suggestedSkills(role).join(", ");
+   const subject=v("subject")||("APPLICATION FOR "+(role||"EMPLOYMENT").toUpperCase());
+   $("subject").value=subject;
+   const paras=[
+    "Dear Hiring Manager,",
+    "I am writing to express my interest in the "+(role||"available")+" position at "+company+". "+reason+".",
+    relevant?"My background includes "+relevant+".":"Although my application details are brief, I am prepared to bring commitment, a professional attitude and a willingness to learn. I would welcome the opportunity to demonstrate my abilities and develop further within your organisation.",
+    "The strengths I can bring include "+highlights+". I value clear communication, teamwork, reliability and completing responsibilities with care.",
+    education?"My education and training include "+education+".":"",
+    "I would appreciate the opportunity to discuss my application and explain how I could contribute to your team. Thank you for your time and consideration.",
+    "Yours faithfully,\n"+name
+   ].filter(Boolean);
+   $("body").value=paras.join("\n\n");
+ }else{
+   const landlord=v("landlord"),tenant=v("tenant"),property=v("propertyAddress"),rent=v("rent"),period=v("period");
+   if(!landlord||!tenant||!property||!rent||!period){$("error").textContent="For a useful tenancy draft, please provide the landlord, tenant, property address, rent and tenancy period.";return}
+   if(!v("terms")) $("terms").value="1. Rent: The tenant shall pay the agreed rent of "+rent+" in the manner and on the dates agreed by both parties.\n2. Use and care: The tenant shall use the premises responsibly, keep them reasonably clean and promptly report damage or repairs.\n3. Utilities: The parties should record in writing who is responsible for water, electricity, internet and other utility charges.\n4. Repairs and access: The landlord and tenant should agree on repair responsibilities and reasonable notice before non-emergency access.\n5. Deposit: Any security deposit, its purpose and conditions for refund should be recorded in writing.\n6. Ending the tenancy: The parties must comply with the notice requirements and applicable Ghanaian law.\n7. Changes: Any variation to this agreement should be written and acknowledged by both parties.\n8. Disputes: The parties should first attempt to resolve disputes amicably and may seek appropriate legal advice.";
+ }
+ $("error").textContent="";
+ render();
+ $("generate").textContent="Regenerate document ↻";
 }
 $("generate").addEventListener("click",generateDocument);
 ids.forEach(id=>$(id)?.addEventListener("input",render));
