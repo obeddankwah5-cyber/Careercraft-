@@ -67,6 +67,25 @@ function drawCvSection(doc, heading, value, accent, splitInline = false) {
   doc.moveDown(0.8);
 }
 
+
+function drawTenancyAgreement(doc,d,accent,fontSize,headingSize){
+ const left=58,right=537,width=right-left,body=fontSize;
+ const field=(label,value)=>{doc.font("Times-Roman").fontSize(body).fillColor("#111111").text(label+" "+(value||"________________________________"),{width,lineGap:3});doc.moveDown(0.65);};
+ doc.font("Times-Bold").fontSize(headingSize+4).fillColor(accent).text("TENANCY AGREEMENT",{align:"center"});doc.moveDown(2);
+ doc.font("Times-Roman").fontSize(body).fillColor("#111111").text("This Tenancy Agreement is made this _____ day of __________, 20____, between "+(d.landlord||"____________________________")+", hereinafter referred to as the Landlord, and "+(d.tenant||"____________________________")+", hereinafter referred to as the Tenant.",{width,lineGap:3,align:"justify"});doc.moveDown(1);
+ field("The Landlord hereby agrees to rent out to the Tenant the property situated at",d.propertyAddress||"________________________________________ for residential purposes.");
+ field("The Tenant agrees to occupy the property for a period of",d.period);
+ field("The Tenant agrees to pay rent in the sum of GH₵",d.rent);
+ doc.font("Times-Roman").fontSize(body).text("The rent shall be paid to the Landlord through an agreed payment method and within the stipulated period.",{width,lineGap:3,align:"justify"});doc.moveDown(1.6);
+ doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text("TERMS AND CONDITIONS");doc.moveDown(0.6);
+ listItems(d.terms||"").forEach((clause,i)=>{if(doc.y>720)doc.addPage();doc.font("Times-Roman").fontSize(body).fillColor("#111111").text((i+1)+".  "+clause.replace(/^\s*\d+[.)]\s*/,""),{width:width-8,indent:8,hanging:4,lineGap:3,align:"justify"});doc.moveDown(0.55);});
+ if(doc.y>620)doc.addPage();doc.moveDown(1.5);
+ doc.font("Times-Roman").fontSize(body).fillColor("#111111").text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",{width,lineGap:3,align:"justify"});doc.moveDown(4);
+ const y=doc.y,row1=54,row2=88,half=width/2;doc.rect(left,y,half,row1+row2).strokeColor("#777777").lineWidth(.8).stroke();doc.moveTo(left+half,y).lineTo(left+half,y+row1+row2).stroke();doc.moveTo(left,y+row1).lineTo(right,y+row1).stroke();
+ doc.font("Times-Roman").fontSize(10).fillColor("#111111").text("........................................................\nNAME OF LANDLADY\nNUMBER",left+7,y+8,{width:half-14,lineGap:2}).text("........................................................\nNAME OF TENANT\nNUMBER",left+half+7,y+8,{width:half-14,lineGap:2});
+ doc.font("Times-Bold").fontSize(10).text("WITNESSES",left+7,y+row1+8);doc.font("Times-Roman").fontSize(9.5).text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)",left+7,y+row1+34,{width:half-14,lineGap:2}).text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)",left+half+7,y+row1+34,{width:half-14,lineGap:2});
+}
+
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
     const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
@@ -79,10 +98,14 @@ function makePdf(order, outputOverride = null, watermark = false) {
       stamp();
     }
     const d = order.data;
+    const fontSize=Math.max(10,Math.min(14,Number(d.fontSize)||12));
+    const headingSize=Math.max(12,Math.min(16,Number(d.headingSize)||14));
+    const themeMap={plain:'#222222',navy:'#263b68',green:'#17675e',burgundy:'#783b4b',charcoal:'#353535',sand:'#80604b',purple:'#7544dc'};
     const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
     const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
     const plainDesign=designNumber>=18;
-    const accent=plainDesign?"#222222":palette[designNumber-1];
+    const accent=themeMap[d.pageTheme]||(plainDesign?"#222222":palette[designNumber-1]);
+    if(d.watermarkEnabled&&clean(d.watermarkText,32)){const mark=()=>doc.save().fillColor(accent).opacity(.10).font("Times-Bold").fontSize(38).rotate(-32,{origin:[297,421]}).text(clean(d.watermarkText,32),55,390,{width:480,align:"center"}).restore();doc.on("pageAdded",mark);mark();}
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
     if (d.documentType !== "letter") {
@@ -130,32 +153,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.moveDown(2);
       doc.font("Helvetica-Bold").text(clean(d.fullName));
     } else if (d.documentType === "tenancy") {
-      doc.font("Helvetica-Bold").fontSize(16).fillColor(plainDesign?"#222222":accent).text("TENANCY AGREEMENT", { align: "center" });
-      doc.moveDown();
-      doc.font("Helvetica").fontSize(11).fillColor("#111827");
-      doc.text("This document records the proposed tenancy details supplied by the parties. Both parties should review the terms and obtain appropriate legal advice before signing.", { lineGap: 4 });
-      doc.moveDown();
-      [["LANDLORD", d.landlord], ["TENANT", d.tenant], ["PROPERTY ADDRESS", d.propertyAddress], ["RENT AND PAYMENT", d.rent], ["TENANCY PERIOD", d.period]].forEach(([label, value]) => {
-        if (value) { doc.font("Helvetica-Bold").text(label); doc.font("Helvetica").text(clean(value, 4000)); doc.moveDown(0.7); }
-      });
-      if (d.terms) {
-        doc.moveDown(0.3);
-        doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign ? "#222222" : accent).text("TERMS AND CONDITIONS");
-        doc.moveDown(0.35);
-        const clauses = listItems(d.terms).length > 1 ? listItems(d.terms) : String(d.terms).split(/\\r?\\n+/).map(x => x.trim()).filter(Boolean);
-        clauses.forEach((clause, index) => {
-          if (doc.y > 735) doc.addPage();
-          const text = clause.replace(/^\\d+[.)]\\s*/, "");
-          doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
-            .text((index + 1) + ".  " + text, { indent: 8, hanging: 4, lineGap: 3 });
-          doc.moveDown(0.25);
-        });
-        doc.moveDown(0.7);
-      }
-      doc.moveDown(2);
-      doc.text("Landlord signature: __________________________     Date: ______________");
-      doc.moveDown(2);
-      doc.text("Tenant signature: ____________________________     Date: ______________");
+      drawTenancyAgreement(doc,d,accent,fontSize,headingSize);
     } else {
       if (d.documentType === "cv") {
         drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), plainDesign ? "#222222" : accent);
@@ -192,7 +190,7 @@ app.post("/api/preview", async (req, res) => {
       documentType: clean(input.documentType, 20), template: clean(input.template, 40),
       fullName: clean(input.fullName, 100), email: clean(input.email, 150),
       phone: clean(input.phone, 40), location: clean(input.location, 120),
-      targetRole: clean(input.targetRole, 120), references: clean(input.references, 1000),
+      targetRole: clean(input.targetRole, 120), references: clean(input.references, 1000), pageTheme: clean(input.pageTheme,20), fontSize: Number(input.fontSize)||12, headingSize: Number(input.headingSize)||14, watermarkEnabled: input.watermarkEnabled===true, watermarkText: clean(input.watermarkText,32),
       summary: clean(input.summary), experience: clean(input.experience),
       education: clean(input.education), skills: clean(input.skills), extra: clean(input.extra),
       recipient: clean(input.recipient), subject: clean(input.subject), body: clean(input.body, 12000),
@@ -237,7 +235,7 @@ app.post("/api/payments/initialize", async (req, res) => {
     const order = { reference, token, status: "pending", createdAt: new Date().toISOString(), data: {
       documentType: clean(data.documentType, 20), template: clean(data.template, 40),
       fullName: clean(data.fullName || data.name, 100), email, phone: clean(data.phone, 40),
-      location: clean(data.location, 120), targetRole: clean(data.targetRole, 120),
+      location: clean(data.location, 120), targetRole: clean(data.targetRole, 120), pageTheme: clean(data.pageTheme,20), fontSize: Number(data.fontSize)||12, headingSize: Number(data.headingSize)||14, watermarkEnabled: data.watermarkEnabled===true, watermarkText: clean(data.watermarkText,32),
       references: clean(data.references, 1000), summary: clean(data.summary), experience: clean(data.experience),
       education: clean(data.education), skills: clean(data.skills), extra: clean(data.extra),
       recipient: clean(data.recipient), subject: clean(data.subject), body: clean(data.body, 12000),
