@@ -24,3 +24,37 @@
 
 /* Keep the intro progress indicator moving throughout the 10-second welcome. */
 .intro-loader span{animation:introLoad 10s linear forwards}
+
+
+/* Premium high-resolution motion polish and animated brand mark */
+.site-header{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(255,255,255,.92);box-shadow:0 8px 28px rgba(35,20,61,.045)}
+.brand{gap:12px;transition:transform .3s ease}
+.brand:hover{transform:translateY(-2px)}
+.brand-icon{position:relative;isolation:isolate;overflow:visible;width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,#6334d5 0%,#a44de5 52%,#ef8b9b 100%);box-shadow:0 8px 22px #7444e54a, inset 0 1px 0 #ffffff80;animation:brandGlow 4s ease-in-out infinite}
+.brand-icon:after{content:"";position:absolute;inset:-4px;border:1px solid #a879ef70;border-radius:18px;z-index:-1;animation:brandHalo 3s ease-in-out infinite}
+.brand-spark{position:absolute;right:-5px;top:-7px;color:#ffc76e;font:700 15px Manrope;text-shadow:0 2px 8px #b76aeb88;animation:brandSpark 2.4s ease-in-out infinite}
+.brand-name{display:block}
+.hero{background-size:150% 150%;animation:heroAurora 18s ease-in-out infinite alternate}
+.hero-stage .mock-doc{will-change:transform,filter;filter:drop-shadow(0 18px 24px #34205212)}
+.orbit-one{border-style:dashed;animation:spin 42s linear infinite}
+.orbit-two{border-color:#e6a7c47a;animation:spin 28s linear infinite reverse}
+.floating-chip{transition:box-shadow .3s,transform .3s}
+.floating-chip:hover{box-shadow:0 16px 36px #39245a2b}
+.service-card,.gallery-paper,.mock-doc{transform-style:preserve-3d;backface-visibility:hidden}
+.service-card{transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s,border-color .3s}
+.service-card:hover{transform:translateY(-10px) scale(1.012);box-shadow:0 24px 55px #35205218}
+.service-photo{transition:transform .8s cubic-bezier(.2,.8,.2,1),filter .8s}
+.service-card:hover .service-photo{transform:scale(1.045);filter:saturate(1.12)}
+.gallery-paper{transition:transform .7s cubic-bezier(.2,.8,.2,1),box-shadow .7s}
+.template-stage:hover .paper-a{transform:translate(-8px,-12px) rotate(-9deg)}
+.template-stage:hover .paper-b{transform:translate(8px,-8px) rotate(7deg)}
+.template-stage:hover .paper-c{transform:translate(0,-16px) rotate(3deg)}
+.btn-primary{position:relative;overflow:hidden}
+.btn-primary:after{content:"";position:absolute;top:-60%;left:-45%;width:35%;height:220%;transform:rotate(25deg);background:linear-gradient(90deg,transparent,#ffffff65,transparent);animation:buttonShine 5s ease-in-out infinite}
+@keyframes brandGlow{0%,100%{box-shadow:0 8px 22px #7444e54a,inset 0 1px 0 #ffffff80}50%{box-shadow:0 10px 30px #b45de978,inset 0 1px 0 #ffffffa8}}
+@keyframes brandHalo{0%,100%{transform:scale(.96);opacity:.35}50%{transform:scale(1.12);opacity:.85}}
+@keyframes brandSpark{0%,100%{transform:rotate(-12deg) scale(.82);opacity:.75}50%{transform:rotate(18deg) scale(1.18);opacity:1}}
+@keyframes heroAurora{0%{background-position:0% 40%}100%{background-position:100% 60%}}
+@keyframes buttonShine{0%,70%{left:-45%;opacity:0}78%{opacity:1}100%{left:130%;opacity:0}}
+@media(max-width:700px){.site-header{height:72px;padding:0 5%}.brand-icon{width:41px;height:41px}.brand{font-size:18px}.main-nav{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}}
+@media(prefers-reduced-motion:reduce){.brand-icon,.brand-icon:after,.brand-spark,.hero,.orbit-one,.orbit-two,.btn-primary:after{animation:none!important}.service-card,.service-photo,.gallery-paper,.brand{transition:none!important}}
