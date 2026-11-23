@@ -25,12 +25,17 @@ function writeOrders(orders) {
 function clean(value, max = 3000) {
   return String(value || "").trim().slice(0, max);
 }
-function makePdf(order) {
+function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
-    const output = path.join(DATA_DIR, order.token + ".pdf");
+    const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
     const doc = new PDFDocument({ size: "A4", margins: { top: 54, bottom: 54, left: 58, right: 58 } });
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
+    if (watermark) {
+      const stamp = () => { doc.save().fillColor("#a0a0a0").opacity(0.22).font("Helvetica-Bold").fontSize(34).rotate(-32, { origin: [297, 421] }).text("UNPAID PREVIEW", 75, 390, { width: 450, align: "center" }).restore(); };
+      doc.on("pageAdded", stamp);
+      stamp();
+    }
     const d = order.data;
     const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
     const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
@@ -111,6 +116,35 @@ function makePdf(order) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, app: "CareerCraft" }));
+
+app.post("/api/preview", async (req, res) => {
+  const previewId = crypto.randomBytes(16).toString("hex");
+  const output = path.join(DATA_DIR, "preview-" + previewId + ".pdf");
+  try {
+    const input = req.body || {};
+    const data = {
+      documentType: clean(input.documentType, 20), template: clean(input.template, 40),
+      fullName: clean(input.fullName, 100), email: clean(input.email, 150),
+      phone: clean(input.phone, 40), location: clean(input.location, 120),
+      summary: clean(input.summary), experience: clean(input.experience),
+      education: clean(input.education), skills: clean(input.skills), extra: clean(input.extra),
+      recipient: clean(input.recipient), subject: clean(input.subject), body: clean(input.body, 12000),
+      landlord: clean(input.landlord), tenant: clean(input.tenant),
+      propertyAddress: clean(input.propertyAddress), rent: clean(input.rent),
+      period: clean(input.period), terms: clean(input.terms, 6000),
+      photoDataUrl: typeof input.photoDataUrl === "string" ? input.photoDataUrl.slice(0, 700000) : ""
+    };
+    if (!data.fullName) return res.status(400).json({ error: "Enter your name before previewing." });
+    await makePdf({ token: previewId, data }, output, true);
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Content-Disposition", 'inline; filename="CareerCraft-unpaid-preview.pdf"');
+    res.type("application/pdf");
+    res.sendFile(output, error => { fs.promises.unlink(output).catch(() => {}); if (error && !res.headersSent) res.status(500).end("Preview could not be opened."); });
+  } catch (error) {
+    fs.promises.unlink(output).catch(() => {});
+    res.status(500).json({ error: "Could not create the PDF preview. Please try again." });
+  }
+});
 
 app.post("/api/payments/initialize", async (req, res) => {
   try {
