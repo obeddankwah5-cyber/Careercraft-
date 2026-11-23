@@ -24,7 +24,7 @@ $("pv").innerHTML=a.map(([h,x])=>{const list=["KEY SKILLS","WORK EXPERIENCE","ED
 function previewListItems(value){
  const raw=String(value||"").trim();
  if(!raw)return [];
- const normalized=raw.replace(/\r\n?/g,"\n").replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Z])/g,"$1\n");
+ const normalized=raw.replace(/\r\n?/g,"\n").replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Za-z])/g,"$1\n");
  return normalized.split(/\n+/).map(item=>item.replace(/^\s*(?:[-*•▪]|\d{1,2}[.)])\s*/,"").trim()).filter(Boolean);
 }
 function sentenceList(value){return value.split(/\n+/).map(x=>x.trim()).filter(Boolean).join("; ")}
