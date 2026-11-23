@@ -3,7 +3,7 @@ const token = new URLSearchParams(location.search).get("access");
 const heading=document.getElementById("heading"), message=document.getElementById("message"), area=document.getElementById("downloadArea");
 async function check(){if(!token){heading.textContent="No order found";message.textContent="Open the payment link again or contact support.";return}
 try{const r=await fetch("/api/orders/"+encodeURIComponent(token));const data=await r.json();if(!r.ok)throw new Error(data.error);
-if(data.status==="paid"){heading.textContent="Your document is ready.";message.textContent="Payment confirmed. Your "+(data.documentType||"document")+" is ready to download, print or share.";area.innerHTML='<a class="primary-btn" href="/download/'+encodeURIComponent(token)+'">Download your PDF ↓</a><p class="status">✓ Payment confirmed</p>';}
+if(data.status==="paid"){heading.textContent="Your document is ready.";message.textContent="Payment confirmed. Your "+(data.documentType||"document")+" is ready to download, print or share.";area.innerHTML='<a class="primary-btn" href="/download/'+encodeURIComponent(token)+'">Download your PDF ↓</a><a class="primary-btn" style="display:block;margin-top:10px;background:#fff;color:#4b287e;border:1px solid #ded4ee" href="/print/'+encodeURIComponent(token)+'" target="_blank" rel="noopener">Open PDF to print ↗</a><p class="status">✓ Payment confirmed</p>';}
 else{heading.textContent="Payment is being confirmed";message.textContent="Please refresh this page in a moment. If you were charged and the document does not appear, contact support.";setTimeout(check,4000);}
 }catch(e){heading.textContent="We could not load this order";message.textContent=e.message||"Please refresh or contact support.";}}
 check();
