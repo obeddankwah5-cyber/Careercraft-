@@ -81,7 +81,7 @@ function makePdf(order) {
       doc.moveDown(2);
       doc.font("Helvetica-Bold").text(clean(d.fullName));
     } else if (d.documentType === "tenancy") {
-      doc.font("Helvetica-Bold").fontSize(16).fillColor(accent).text("TENANCY AGREEMENT", { align: "center" });
+      doc.font("Helvetica-Bold").fontSize(16).fillColor(plainDesign?"#222222":accent).text("TENANCY AGREEMENT", { align: "center" });
       doc.moveDown();
       doc.font("Helvetica").fontSize(11).fillColor("#111827");
       doc.text("This document records the proposed tenancy details supplied by the parties. Both parties should review the terms and obtain appropriate legal advice before signing.", { lineGap: 4 });
