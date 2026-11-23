@@ -6,7 +6,7 @@ const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
+const DATA_DIR = process.env.DATA_DIR || path.join("/tmp", "careercraft-data");
 const ORDER_FILE = path.join(DATA_DIR, "orders.json");
 const PUBLIC_URL = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
 
