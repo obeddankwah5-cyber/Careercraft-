@@ -77,8 +77,18 @@ function drawTenancyAgreement(doc,d,accent,fontSize,headingSize){
  field("The Tenant agrees to occupy the property for a period of",d.period);
  field("The Tenant agrees to pay rent in the sum of GH₵",d.rent);
  doc.font("Times-Roman").fontSize(body).text("The rent shall be paid to the Landlord through an agreed payment method and within the stipulated period.",{width,lineGap:3,align:"justify"});doc.moveDown(1.6);
- doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text("TERMS AND CONDITIONS");doc.moveDown(0.6);
- listItems(d.terms||"").forEach((clause,i)=>{if(doc.y>720)doc.addPage();doc.font("Times-Roman").fontSize(body).fillColor("#111111").text((i+1)+".  "+clause.replace(/^\s*\d+[.)]\s*/,""),{width:width-8,indent:8,hanging:4,lineGap:3,align:"justify"});doc.moveDown(0.55);});
+ doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000").text("TERMS AND CONDITIONS");doc.moveDown(0.9);
+ const clauses=listItems(d.terms||"");
+ clauses.forEach((clause,i)=>{
+   const clauseText=(i+1)+".  "+clause.replace(/^\s*\d+[.)]\s*/,"");
+   const opts={width:width-8,indent:8,hanging:4,lineGap:3,align:"justify"};
+   doc.font("Times-Roman").fontSize(body).fillColor("#111111");
+   const required=doc.heightOfString(clauseText,opts)+18;
+   const bottom=doc.page.height-doc.page.margins.bottom;
+   if(doc.y+required>bottom) doc.addPage();
+   doc.text(clauseText,opts);
+   doc.moveDown(0.85);
+ });
  if(doc.y>620)doc.addPage();doc.moveDown(1.5);
  doc.font("Times-Roman").fontSize(body).fillColor("#111111").text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",{width,lineGap:3,align:"justify"});doc.moveDown(4);
  const y=doc.y,row1=54,row2=88,half=width/2;doc.rect(left,y,half,row1+row2).strokeColor("#777777").lineWidth(.8).stroke();doc.moveTo(left+half,y).lineTo(left+half,y+row1+row2).stroke();doc.moveTo(left,y+row1).lineTo(right,y+row1).stroke();
