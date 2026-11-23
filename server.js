@@ -25,6 +25,19 @@ function writeOrders(orders) {
 function clean(value, max = 3000) {
   return String(value || "").trim().slice(0, max);
 }
+
+function suggestedSkills(role) {
+  const r = String(role || "").toLowerCase();
+  if (/admin|secretary|office|reception/.test(r)) return ["Communication", "Organisation", "Time management", "Record keeping", "Customer service", "Computer literacy"];
+  if (/teacher|education|tutor/.test(r)) return ["Communication", "Lesson preparation", "Classroom support", "Patience", "Organisation", "Learner engagement"];
+  if (/sales|marketing|business development/.test(r)) return ["Customer relations", "Communication", "Product presentation", "Negotiation", "Teamwork", "Goal orientation"];
+  if (/account|finance|cashier|bank/.test(r)) return ["Numeracy", "Attention to detail", "Record keeping", "Confidentiality", "Computer literacy", "Customer service"];
+  if (/driver|delivery|logistic|warehouse/.test(r)) return ["Time management", "Safety awareness", "Route planning", "Reliability", "Teamwork", "Record keeping"];
+  if (/nurse|health|care|clinic/.test(r)) return ["Communication", "Compassionate service", "Attention to detail", "Teamwork", "Confidentiality", "Organisation"];
+  if (/it|software|computer|technician|developer/.test(r)) return ["Problem solving", "Technical support", "Troubleshooting", "Communication", "Teamwork", "Continuous learning"];
+  return ["Communication", "Teamwork", "Problem solving", "Time management", "Organisation", "Willingness to learn"];
+}
+
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
     const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
@@ -59,7 +72,8 @@ function makePdf(order, outputOverride = null, watermark = false) {
       ["PROFESSIONAL SUMMARY", d.summary],
       ["WORK EXPERIENCE", d.experience],
       ["EDUCATION", d.education],
-      ["SKILLS", d.skills],
+      ["SKILLS", d.skills || (d.documentType === "cv" ? suggestedSkills(d.targetRole).join(" · ") : "")],
+      ["REFERENCES", d.documentType === "cv" ? (d.references || "Available upon request") : ""],
       ["ADDITIONAL DETAILS", d.extra]
     ];
     if (d.documentType === "letter") {
@@ -126,6 +140,7 @@ app.post("/api/preview", async (req, res) => {
       documentType: clean(input.documentType, 20), template: clean(input.template, 40),
       fullName: clean(input.fullName, 100), email: clean(input.email, 150),
       phone: clean(input.phone, 40), location: clean(input.location, 120),
+      targetRole: clean(input.targetRole, 120), references: clean(input.references, 1000),
       summary: clean(input.summary), experience: clean(input.experience),
       education: clean(input.education), skills: clean(input.skills), extra: clean(input.extra),
       recipient: clean(input.recipient), subject: clean(input.subject), body: clean(input.body, 12000),
