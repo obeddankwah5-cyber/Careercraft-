@@ -22,5 +22,5 @@
 @keyframes introLoad{from{transform:translateX(-110%)}to{transform:translateX(230%)}}
 @media(prefers-reduced-motion:reduce){.intro-splash *{animation:none!important}.intro-splash{transition:none}}
 
-/* Keep the intro progress indicator moving throughout the 30-second welcome. */
-.intro-loader span{animation:introLoad 30s linear forwards}
+/* Keep the intro progress indicator moving throughout the 10-second welcome. */
+.intro-loader span{animation:introLoad 10s linear forwards}
