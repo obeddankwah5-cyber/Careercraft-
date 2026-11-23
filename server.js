@@ -11,7 +11,7 @@ const ORDER_FILE = path.join(DATA_DIR, "orders.json");
 const PUBLIC_URL = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-app.use(express.json({ limit: "1mb", verify: (req, res, buf) => { req.rawBody = Buffer.from(buf); } }));
+app.use(express.json({ limit: "8mb", verify: (req, res, buf) => { req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -32,13 +32,18 @@ function makePdf(order) {
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
     const d = order.data;
-    doc.font("Helvetica-Bold").fontSize(20).fillColor("#172554").text(clean(d.fullName || d.name || "Your Document", 100));
+    const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
+    const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
+    const accent=palette[designNumber-1];
+    const photoMatch=typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
+    if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
+    doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
     doc.moveDown(0.35);
     if (d.email || d.phone || d.location) {
       doc.font("Helvetica").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
     }
     doc.moveDown();
-    doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor("#cbd5e1").stroke();
+    doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor(accent).lineWidth(designNumber%4===0?2:1).stroke();
     doc.moveDown();
     const sections = [
       ["PROFESSIONAL SUMMARY", d.summary],
@@ -61,7 +66,7 @@ function makePdf(order) {
       doc.moveDown(2);
       doc.font("Helvetica-Bold").text(clean(d.fullName));
     } else if (d.documentType === "tenancy") {
-      doc.font("Helvetica-Bold").fontSize(16).fillColor("#172554").text("TENANCY AGREEMENT", { align: "center" });
+      doc.font("Helvetica-Bold").fontSize(16).fillColor(accent).text("TENANCY AGREEMENT", { align: "center" });
       doc.moveDown();
       doc.font("Helvetica").fontSize(11).fillColor("#111827");
       doc.text("This document records the proposed tenancy details supplied by the parties. Both parties should review the terms and obtain appropriate legal advice before signing.", { lineGap: 4 });
@@ -76,7 +81,7 @@ function makePdf(order) {
     } else {
       sections.forEach(([heading, value]) => {
         if (value) {
-          doc.font("Helvetica-Bold").fontSize(11).fillColor("#172554").text(heading);
+          doc.font("Helvetica-Bold").fontSize(11).fillColor(accent).text(heading);
           doc.moveDown(0.25);
           doc.font("Helvetica").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
           doc.moveDown();
@@ -107,7 +112,7 @@ app.post("/api/payments/initialize", async (req, res) => {
       education: clean(data.education), skills: clean(data.skills), extra: clean(data.extra),
       recipient: clean(data.recipient), subject: clean(data.subject), body: clean(data.body, 12000),
       date: clean(data.date), landlord: clean(data.landlord), tenant: clean(data.tenant),
-      propertyAddress: clean(data.propertyAddress), rent: clean(data.rent), period: clean(data.period), terms: clean(data.terms, 6000)
+      propertyAddress: clean(data.propertyAddress), rent: clean(data.rent), period: clean(data.period), terms: clean(data.terms, 6000), photoDataUrl: typeof data.photoDataUrl === "string" ? data.photoDataUrl.slice(0, 700000) : ""
     }};
     const orders = readOrders();
     orders[reference] = order;
