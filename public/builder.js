@@ -38,7 +38,6 @@ function generateDocument(){
    const profile=[name+" is presenting an application for "+focus+".",experience?"Relevant background includes "+experience+".":"The candidate is encouraged to add employment, internship, volunteer or practical project experience where applicable.",education?"Education and training include "+education+".":"Education, training and relevant certificates can be added to strengthen this section.",skills?"Relevant skills include "+skills+".":"Suggested transferable strengths include "+suggestedSkills(role).join(", ")+". Please keep only the skills that genuinely describe you."].join(" ");
    $("summary").value=profile;
    if(!skills) $("skills").value=suggestedSkills(role).join(" · ");
-   if(!v("experience")) $("experience").value="Add any relevant work, internship, volunteering, apprenticeship or personal project experience here. If you have no work experience yet, describe practical projects, responsibilities or activities that demonstrate your abilities.";
  }else if(kind==="letter"){
    const reason=v("letterReason")||("I am interested in this opportunity because it matches my career goals and offers an opportunity to contribute, learn and grow professionally");
    const relevant=v("letterExperience")||experience;
