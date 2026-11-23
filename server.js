@@ -185,7 +185,8 @@ app.post("/api/payments/initialize", async (req, res) => {
     const order = { reference, token, status: "pending", createdAt: new Date().toISOString(), data: {
       documentType: clean(data.documentType, 20), template: clean(data.template, 40),
       fullName: clean(data.fullName || data.name, 100), email, phone: clean(data.phone, 40),
-      location: clean(data.location, 120), summary: clean(data.summary), experience: clean(data.experience),
+      location: clean(data.location, 120), targetRole: clean(data.targetRole, 120),
+      references: clean(data.references, 1000), summary: clean(data.summary), experience: clean(data.experience),
       education: clean(data.education), skills: clean(data.skills), extra: clean(data.extra),
       recipient: clean(data.recipient), subject: clean(data.subject), body: clean(data.body, 12000),
       date: clean(data.date), landlord: clean(data.landlord), tenant: clean(data.tenant),
