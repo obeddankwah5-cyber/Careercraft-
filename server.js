@@ -46,10 +46,10 @@ function listItems(value, splitInline = false) {
   // Accept pasted numbered clauses whether they arrive on separate lines or
   // as one continuous paragraph (for example: "1. Rent ... 2. Use and care ...").
   const normalized = raw
-    .replace(/\\r\\n?/g, "\\n")
-    .replace(/([^\\n])\\s+(?=\\d{1,2}[.)]\\s+[A-Z])/g, "$1\\n");
-  let items = normalized.split(/\\n+/)
-    .map(item => item.replace(/^\\s*(?:[-*•▪]|\\d{1,2}[.)])\\s*/, "").trim())
+    .replace(/\r\n?/g, "\n")
+    .replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Z])/g, "$1\n");
+  let items = normalized.split(/\n+/)
+    .map(item => item.replace(/^\s*(?:[-*•▪]|\d{1,2}[.)])\s*/, "").trim())
     .filter(Boolean);
 
   if (items.length === 1 && splitInline && /[·,;]/.test(items[0])) {
@@ -119,7 +119,7 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
 
   const clauses = listItems(d.terms || "");
   clauses.forEach((clause, index) => {
-    const cleanClause = clause.replace(/^\\s*\\d{1,2}[.)]\\s*/, "");
+    const cleanClause = clause.replace(/^\s*\d{1,2}[.)]\s*/, "");
     const colon = cleanClause.indexOf(":");
     const label = colon > 0 ? cleanClause.slice(0, colon + 1) : "";
     const description = colon > 0 ? cleanClause.slice(colon + 1).trim() : cleanClause;
@@ -163,13 +163,13 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
   doc.moveTo(left, y + row1).lineTo(right, y + row1).stroke();
 
   doc.font("Times-Roman").fontSize(10).fillColor("#111111")
-    .text("........................................................\\nNAME OF LANDLORD\\nNUMBER", left + 7, y + 8, { width: half - 14, lineGap: 2 })
-    .text("........................................................\\nNAME OF TENANT\\nNUMBER", left + half + 7, y + 8, { width: half - 14, lineGap: 2 });
+    .text("........................................................\nNAME OF LANDLORD\nNUMBER", left + 7, y + 8, { width: half - 14, lineGap: 2 })
+    .text("........................................................\nNAME OF TENANT\nNUMBER", left + half + 7, y + 8, { width: half - 14, lineGap: 2 });
 
   doc.font("Times-Bold").fontSize(10).fillColor("#111111").text("WITNESSES", left + 7, y + row1 + 8);
   doc.font("Times-Roman").fontSize(9.5).fillColor("#111111")
-    .text(".........................................................\\nNAME OF WITNESS (OR LEAVE A LINE)\\nNUMBER (OR LEAVE A LINE)", left + 7, y + row1 + 34, { width: half - 14, lineGap: 2 })
-    .text(".........................................................\\nNAME OF WITNESS (OR LEAVE A LINE)\\nNUMBER (OR LEAVE A LINE)", left + half + 7, y + row1 + 34, { width: half - 14, lineGap: 2 });
+    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + 7, y + row1 + 34, { width: half - 14, lineGap: 2 })
+    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + half + 7, y + row1 + 34, { width: half - 14, lineGap: 2 });
 }
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
