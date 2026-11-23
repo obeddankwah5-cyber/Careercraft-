@@ -195,6 +195,18 @@ app.get("/download/:token", (req, res) => {
   res.download(file, "CareerCraft-" + order.data.fullName.replace(/[^a-z0-9-_]/gi, "-") + ".pdf");
 });
 
+
+app.get("/print/:token", (req, res) => {
+  const orders = readOrders();
+  const order = Object.values(orders).find(item => item.token === req.params.token);
+  if (!order || order.status !== "paid") return res.status(404).send("This document is not available for printing.");
+  const file = path.join(DATA_DIR, order.token + ".pdf");
+  if (!fs.existsSync(file)) return res.status(404).send("PDF is being prepared. Refresh this page shortly.");
+  res.type("application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="CareerCraft-' + order.data.fullName.replace(/[^a-z0-9-_]/gi, "-") + '.pdf"');
+  res.sendFile(file);
+});
+
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   const signature = req.headers["x-paystack-signature"];
