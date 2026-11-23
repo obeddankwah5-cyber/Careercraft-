@@ -47,7 +47,7 @@ function listItems(value, splitInline = false) {
   // as one continuous paragraph (for example: "1. Rent ... 2. Use and care ...").
   const normalized = raw
     .replace(/\r\n?/g, "\n")
-    .replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Z])/g, "$1\n");
+    .replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Za-z])/g, "$1\n");
   let items = normalized.split(/\n+/)
     .map(item => item.replace(/^\s*(?:[-*•▪]|\d{1,2}[.)])\s*/, "").trim())
     .filter(Boolean);
