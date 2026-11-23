@@ -46,7 +46,7 @@ function generateDocument(){
   $("generate").textContent="Regenerate document ↻";
 }
 $("generate").addEventListener("click",generateDocument);
-\nids.forEach(id=>$(id)?.addEventListener("input",render));
+ids.forEach(id=>$(id)?.addEventListener("input",render));
 $("photo").addEventListener("change",()=>{const file=$("photo").files?.[0];if(!file){photoDataUrl="";render();return}if(!["image/jpeg","image/png"].includes(file.type)){$("error").textContent="Please choose a JPG or PNG image.";$("photo").value="";return}if(file.size>8*1024*1024){$("error").textContent="Choose a photo smaller than 8 MB.";$("photo").value="";return}const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const scale=Math.min(1,1000/Math.max(img.width,img.height)),canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);photoDataUrl=canvas.toDataURL("image/jpeg",.82);URL.revokeObjectURL(url);$("error").textContent="";render()};img.onerror=()=>{$("error").textContent="That picture could not be opened. Try another JPG or PNG.";URL.revokeObjectURL(url)};img.src=url});
 $("removePhoto").addEventListener("click",()=>{photoDataUrl="";$("photo").value="";$("error").textContent="";render()});
 $("type").addEventListener("change",()=>{templateList();render()});
