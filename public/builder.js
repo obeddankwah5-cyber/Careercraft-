@@ -18,5 +18,20 @@ $("removePhoto").addEventListener("click",()=>{photoDataUrl="";$("photo").value=
 $("type").addEventListener("change",()=>{templateList();render()});
 $("templateSelect").addEventListener("change",()=>{template=$("templateSelect").value;stylePreview()});
 const params=new URLSearchParams(location.search),wanted=params.get("template");templateList();if(wanted&&/^(cv|letter|tenancy)-(0[1-9]|1[0-9]|20)$/.test(wanted)){template=wanted;if(typeKey()!==wanted.split("-")[0])$("type").value=wanted.startsWith("cv-")?"cv":wanted.startsWith("letter-")?"letter":"tenancy";templateList();$("templateSelect").value=template;stylePreview()}
-$("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
+
+$("previewPdf").onclick=async()=>{
+  if(!v("fullName")){$("error").textContent="Enter your name before previewing.";return}
+  const d=Object.fromEntries(ids.map(id=>[id,v(id)]));
+  d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;
+  const button=$("previewPdf");button.disabled=true;button.textContent="Preparing PDF preview…";$("error").textContent="";
+  try{
+    const response=await fetch("/api/preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+    if(!response.ok){let problem={};try{problem=await response.json()}catch{}throw new Error(problem.error||"PDF preview could not be created.")}
+    const blob=await response.blob();const url=URL.createObjectURL(blob);const opened=window.open(url,"_blank");
+    if(!opened){const link=document.createElement("a");link.href=url;link.target="_blank";link.rel="noopener";link.textContent="Open your PDF preview";$("error").appendChild(link)}
+    setTimeout(()=>URL.revokeObjectURL(url),120000);
+  }catch(error){$("error").textContent=error.message||"Could not open PDF preview."}
+  finally{button.disabled=false;button.textContent="Preview Your Document · PDF ↗"}
+};
+\n$("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
 render();
