@@ -3,6 +3,6 @@ document.querySelector(".menu-toggle")?.addEventListener("click",()=>document.qu
 const introSplash=document.getElementById("introSplash");
 if(introSplash){
   const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  window.setTimeout(()=>introSplash.classList.add("is-leaving"),reducedMotion?250:2100);
-  window.setTimeout(()=>introSplash.remove(),reducedMotion?650:2900);
+  window.setTimeout(()=>introSplash.classList.add("is-leaving"),reducedMotion?250:30000);
+  window.setTimeout(()=>introSplash.remove(),reducedMotion?650:30800);
 }
