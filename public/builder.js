@@ -19,21 +19,15 @@ $("type").addEventListener("change",()=>{templateList();render()});
 $("templateSelect").addEventListener("change",()=>{template=$("templateSelect").value;stylePreview()});
 const params=new URLSearchParams(location.search),wanted=params.get("template");templateList();if(wanted&&/^(cv|letter|tenancy)-(0[1-9]|1[0-9]|20)$/.test(wanted)){template=wanted;if(typeKey()!==wanted.split("-")[0])$("type").value=wanted.startsWith("cv-")?"cv":wanted.startsWith("letter-")?"letter":"tenancy";templateList();$("templateSelect").value=template;stylePreview()}
 
-$("closePdfPreview").addEventListener("click",()=>{ $("pdfPreviewModal").hidden=true; $("pdfPreviewFrame").src="about:blank"; });
-$("previewPdf").onclick=async()=>{
+$("closePdfPreview").addEventListener("click",()=>{ $("pdfPreviewModal").hidden=true; $("previewCanvas").innerHTML=""; });
+$("previewPdf").onclick=()=>{
   if(!v("fullName")){$("error").textContent="Enter your name before previewing.";return}
-  const d=Object.fromEntries(ids.map(id=>[id,v(id)]));
-  d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;
-  const button=$("previewPdf");button.disabled=true;button.textContent="Preparing PDF preview…";$("error").textContent="";
-  try{
-    const response=await fetch("/api/preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
-    if(!response.ok){let problem={};try{problem=await response.json()}catch{}throw new Error(problem.error||"PDF preview could not be created.")}
-    const result=await response.json();
-    if(!result.url)throw new Error("Preview link was not returned.");
-    $("pdfPreviewFrame").src=result.url+"#toolbar=0&navpanes=0";
-    $("pdfPreviewModal").hidden=false;
-  }catch(error){$("error").textContent=error.message||"Could not open PDF preview."}
-  finally{button.disabled=false;button.textContent="Preview Your Document · PDF ↗"}
+  $("error").textContent="";
+  const canvas=$("previewCanvas");canvas.innerHTML="";
+  const page=$("paperPreview").cloneNode(true);page.removeAttribute("id");
+  page.style.width="100%";page.style.maxWidth="794px";page.style.minHeight="1050px";page.style.margin="0 auto";page.style.boxSizing="border-box";
+  canvas.appendChild(page);
+  $("pdfPreviewModal").hidden=false;
 };
 
 $("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
