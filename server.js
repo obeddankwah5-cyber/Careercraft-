@@ -149,30 +149,57 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
     doc.moveDown(0.9);
   });
 
+  const declaration = "DECLARATION: Both parties confirm that they have read, understood and voluntarily agreed to the terms and conditions in this Tenancy Agreement. Each party acknowledges receipt of a copy of the signed agreement.";
+  const declarationOptions = { width, lineGap: 3, align: "justify" };
+  const declarationHeight = doc.heightOfString(declaration, declarationOptions);
+  const sectionHeadingHeight = headingSize + 12;
+  const signatureTableHeight = 190;
+  const needed = sectionHeadingHeight + declarationHeight + 28 + signatureTableHeight + 18;
+  const pageBottom = doc.page.height - doc.page.margins.bottom;
+  if (doc.y + needed > pageBottom) doc.addPage();
+
   doc.moveDown(1.2);
+  doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000")
+    .text("DECLARATION AND SIGNATURES", { width });
+  doc.moveDown(0.6);
   doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",
-      { width, lineGap: 3, align: "justify" });
-  doc.moveDown(3);
+    .text(declaration, declarationOptions);
+  doc.moveDown(1.2);
 
-  const row1 = 54, row2 = 88, half = width / 2;
-  const tableHeight = row1 + row2;
-  const bottom = doc.page.height - doc.page.margins.bottom;
-  if (doc.y + tableHeight > bottom) doc.addPage();
+  const half = width / 2;
+  const signatureRow = 104;
+  const witnessRow = 86;
+  const tableHeight = signatureRow + witnessRow;
   const y = doc.y;
+  const cellPadding = 10;
+  const cellWidth = half - cellPadding * 2;
 
-  doc.rect(left, y, half, tableHeight).strokeColor("#777777").lineWidth(.8).stroke();
+  doc.lineWidth(0.8).strokeColor("#555555")
+    .rect(left, y, width, tableHeight).stroke();
   doc.moveTo(left + half, y).lineTo(left + half, y + tableHeight).stroke();
-  doc.moveTo(left, y + row1).lineTo(right, y + row1).stroke();
+  doc.moveTo(left, y + signatureRow).lineTo(right, y + signatureRow).stroke();
 
-  doc.font("Times-Roman").fontSize(10).fillColor("#111111")
-    .text("........................................................\nNAME OF LANDLORD\nNUMBER", left + 7, y + 8, { width: half - 14, lineGap: 2 })
-    .text("........................................................\nNAME OF TENANT\nNUMBER", left + half + 7, y + 8, { width: half - 14, lineGap: 2 });
+  const partyCell = (x, heading, signatureLabel) => {
+    doc.font("Times-Bold").fontSize(10).fillColor("#000000")
+      .text(heading, x + cellPadding, y + 9, { width: cellWidth });
+    doc.font("Times-Roman").fontSize(9.5).fillColor("#111111")
+      .text(signatureLabel + ": __________________________________", x + cellPadding, y + 30, { width: cellWidth })
+      .text("Full name: ______________________________", x + cellPadding, y + 52, { width: cellWidth })
+      .text("Date: ___________________________________", x + cellPadding, y + 74, { width: cellWidth });
+  };
+  partyCell(left, "LANDLORD", "Signature");
+  partyCell(left + half, "TENANT", "Signature");
 
-  doc.font("Times-Bold").fontSize(10).fillColor("#111111").text("WITNESSES", left + 7, y + row1 + 8);
-  doc.font("Times-Roman").fontSize(9.5).fillColor("#111111")
-    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + 7, y + row1 + 34, { width: half - 14, lineGap: 2 })
-    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + half + 7, y + row1 + 34, { width: half - 14, lineGap: 2 });
+  const witnessCell = (x, heading) => {
+    doc.font("Times-Bold").fontSize(9.5).fillColor("#000000")
+      .text(heading, x + cellPadding, y + signatureRow + 8, { width: cellWidth });
+    doc.font("Times-Roman").fontSize(9).fillColor("#111111")
+      .text("Signature: ______________________________", x + cellPadding, y + signatureRow + 27, { width: cellWidth })
+      .text("Full name: ______________________________", x + cellPadding, y + signatureRow + 46, { width: cellWidth })
+      .text("Contact: _______________________________", x + cellPadding, y + signatureRow + 65, { width: cellWidth });
+  };
+  witnessCell(left, "WITNESS 1");
+  witnessCell(left + half, "WITNESS 2");
 }
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
