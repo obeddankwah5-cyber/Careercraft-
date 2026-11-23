@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const ids=["fullName","email","phone","location","summary","experience","education","skills","recipient","subject","body","landlord","tenant","propertyAddress","rent","period","terms"];
+const ids=["fullName","email","phone","location","targetRole","summary","experience","education","skills","recipient","subject","letterReason","letterExperience","letterSkills","body","landlord","tenant","propertyAddress","rent","period","terms"];
 const names={
 cv:["Classic Professional","Modern Sidebar","Elegant Executive","Minimal Clean","Creative Profile","Academic Focus","Corporate Bold","Graduate Starter","Professional Compact","Contemporary","Technical Specialist","Healthcare Professional","Finance Executive","Marketing Creative","Two Column Modern","Clean Monochrome","Navy Executive","Plain Standard CV","Simple Text CV","Traditional No-Design CV"],
 letter:["Traditional Formal","Modern Green Accent","Minimal Business Letter","Executive Correspondence","Classic Serif","Clean Contemporary","Bold Header","Elegant Editorial","Graduate Application","Creative Agency","Professional Navy","Warm Neutral","Academic Letter","Finance Formal","Healthcare Application","Compact Business","Modern Accent","Plain Standard Letter","Simple Text Letter","Traditional No-Design Letter"],
@@ -12,7 +12,41 @@ function typeKey(){return $("type").value==="cv"?"cv":$("type").value==="letter"
 function templateList(){const key=typeKey(),select=$("templateSelect"),current=template;select.innerHTML=names[key].map((name,i)=>'<option value="'+key+'-'+String(i+1).padStart(2,"0")+'">'+String(i+1).padStart(2,"0")+' · '+name+'</option>').join("");template=names[key].some((_,i)=>key+"-"+String(i+1).padStart(2,"0")===current)?current:key+"-01";select.value=template;stylePreview()}
 function stylePreview(){const n=Math.max(0,Number(template.split("-").pop())-1),key=typeKey(),paper=$("paperPreview");paper.style.setProperty("--template-accent",colors[n]);paper.dataset.design=template;paper.dataset.accent=colors[n];paper.dataset.layout=n>=17?"plain":String(n%5);paper.style.borderTop=n>=17?"0":(n%4===0?"8px solid ":"4px solid ")+colors[n];paper.style.borderRadius=n%3===1?"14px":"3px";paper.style.fontFamily=n%4===2?"Georgia,serif":"Arial,sans-serif"}
 function render(){let t=$("type").value;$("photoField").hidden=t!=="cv";const photo=$("pvPhoto");photo.hidden=!photoDataUrl;if(photoDataUrl)photo.src=photoDataUrl;$("cv").hidden=t!=="cv";$("letter").hidden=t!=="letter";$("tenancy").hidden=t!=="tenancy";const paper=$("paperPreview");paper.classList.toggle("letter-preview",t==="letter");$("pvName").textContent=v("fullName")||"YOUR NAME";$("pvContact").textContent=[v("email"),v("phone"),v("location")].filter(Boolean).join(" · ");if(t==="letter"){const sender=esc(v("fullName")||"YOUR NAME")+"<br>"+esc(v("location")||"Your location")+"<br>"+esc(v("phone")||"Phone number")+"<br>"+esc(v("email")||"Email address");const recipient=esc(v("recipient")||"The Hiring Manager<br>Company Name<br>Accra, Ghana");const subject=esc(v("subject")||"APPLICATION FOR EMPLOYMENT");const paragraphs=(v("body")||"Write your application letter here. Explain why you are applying, the skills and experience you bring, and your interest in the role.").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");$("pv").innerHTML='<div class="letter-topline"><span></span>APPLICATION LETTER</div><div class="letter-sender">'+sender+'</div><div class="letter-recipient">'+recipient+'</div><div class="letter-greeting">Dear Sir/Madam,</div><div class="letter-subject">'+subject+'</div><div class="letter-body">'+paragraphs+'</div><div class="letter-closing">Yours faithfully,<br><br><b>'+(esc(v("fullName")||"YOUR NAME"))+'</b></div>';return}let a=t==="cv"?[["PROFILE",v("summary")],["EXPERIENCE",v("experience")],["EDUCATION",v("education")],["SKILLS",v("skills")]]:[["LANDLORD",v("landlord")],["TENANT",v("tenant")],["PROPERTY ADDRESS",v("propertyAddress")],["RENT AND PAYMENT",v("rent")],["TENANCY PERIOD",v("period")],["TERMS",v("terms")]];$("pv").innerHTML=a.map(([h,x])=>"<h4 style='color:var(--template-accent)'>"+h+"</h4><p>"+(esc(x)||"Your details will appear here.")+"</p>").join("")}
-ids.forEach(id=>$(id)?.addEventListener("input",render));
+
+function sentenceList(value){return value.split(/\n+/).map(x=>x.trim()).filter(Boolean).join("; ")}
+function generateDocument(){
+  const kind=typeKey(),name=v("fullName"),role=v("targetRole"),experience=sentenceList(v("experience")),education=sentenceList(v("education")),skills=sentenceList(v("skills"));
+  if(!name){$("error").textContent="Please enter your full name first.";return}
+  if(kind==="cv"){
+    if(!experience&&!education&&!skills){$("error").textContent="Add at least your work experience, education or skills so the CV can be written accurately.";return}
+    const intro=role?name+" is a candidate for "+role+" opportunities.":"Motivated professional with a background supported by the experience and qualifications listed below.";
+    $("summary").value=[intro,experience?"Brings experience in "+experience+".":"",education?"Educational background includes "+education+".":"",skills?"Key strengths include "+skills+".":""].filter(Boolean).join(" ");
+    $("experience").value=v("experience").split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>x.startsWith("•")?x:"• "+x).join("\n");
+    $("skills").value=v("skills").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean).join(" · ");
+  }else if(kind==="letter"){
+    const company=v("recipient")||"the organisation",subject=v("subject")||("APPLICATION FOR "+(role||"EMPLOYMENT").toUpperCase());
+    const reason=v("letterReason"),relevant=v("letterExperience")||v("experience"),highlights=v("letterSkills")||v("skills");
+    if(!role&&!reason&&!relevant&&!highlights){$("error").textContent="Add the job title, your reason for applying, experience or skills so the letter can be written accurately.";return}
+    $("subject").value=subject;
+    const paragraphs=[
+      "I am writing to apply for the "+(role||"available")+" position at "+company+". I am interested in this opportunity because "+(reason||"I would welcome the opportunity to contribute my abilities and continue developing professionally")+".",
+      relevant?"My relevant background includes "+relevant+".":"",
+      highlights?"I can also offer skills in "+highlights+".":"",
+      education?"My educational background includes "+education+".":"",
+      "Thank you for considering my application. I would appreciate the opportunity to discuss how my background and abilities may meet your needs."
+    ].filter(Boolean);
+    $("body").value=paragraphs.join("\n\n");
+  }else{
+    const landlord=v("landlord"),tenant=v("tenant"),property=v("propertyAddress"),rent=v("rent"),period=v("period");
+    if(!landlord||!tenant||!property||!rent||!period){$("error").textContent="Please provide the landlord, tenant, property address, rent and tenancy period first.";return}
+    if(!v("terms"))$("terms").value="The tenant agrees to pay the stated rent as agreed by both parties. The tenant will keep the property reasonably clean and report damage or necessary repairs to the landlord. The landlord and tenant should agree in writing on any changes to this agreement. Any deposit, utility responsibility, notice period and maintenance arrangements should be confirmed by both parties before signing.";
+  }
+  $("error").textContent="";
+  render();
+  $("generate").textContent="Regenerate document ↻";
+}
+$("generate").addEventListener("click",generateDocument);
+\nids.forEach(id=>$(id)?.addEventListener("input",render));
 $("photo").addEventListener("change",()=>{const file=$("photo").files?.[0];if(!file){photoDataUrl="";render();return}if(!["image/jpeg","image/png"].includes(file.type)){$("error").textContent="Please choose a JPG or PNG image.";$("photo").value="";return}if(file.size>8*1024*1024){$("error").textContent="Choose a photo smaller than 8 MB.";$("photo").value="";return}const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const scale=Math.min(1,1000/Math.max(img.width,img.height)),canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);photoDataUrl=canvas.toDataURL("image/jpeg",.82);URL.revokeObjectURL(url);$("error").textContent="";render()};img.onerror=()=>{$("error").textContent="That picture could not be opened. Try another JPG or PNG.";URL.revokeObjectURL(url)};img.src=url});
 $("removePhoto").addEventListener("click",()=>{photoDataUrl="";$("photo").value="";$("error").textContent="";render()});
 $("type").addEventListener("change",()=>{templateList();render()});
