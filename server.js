@@ -51,7 +51,7 @@ function listItems(value, splitInline = false) {
 function drawCvSection(doc, heading, value, accent, splitInline = false, bodySize = 12, headingSize = 14) {
   if (!String(value || "").trim()) return;
   if (doc.y > 690) doc.addPage();
-  doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text(heading);
+  doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000").text(heading);
   doc.moveDown(0.3);
   const items = listItems(value, splitInline);
   if (items.length > 1 || splitInline) {
@@ -143,7 +143,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.moveDown(1.5);
       doc.text("Dear Sir/Madam,");
       doc.moveDown(1.2);
-      doc.font("Times-Bold").fontSize(headingSize).fillColor("#111827")
+      doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000")
         .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: !plainDesign && layout === 2 ? "left" : plainDesign ? "left" : "center", underline: plainDesign || layout !== 2 });
       doc.moveDown(1.2);
       doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827")
@@ -165,7 +165,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
       } else {
         sections.forEach(([heading, value]) => {
           if (value) {
-            doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text(heading);
+            doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000").text(heading);
             doc.moveDown(0.25);
             doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
             doc.moveDown();
