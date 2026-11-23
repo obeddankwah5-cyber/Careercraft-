@@ -38,6 +38,35 @@ function suggestedSkills(role) {
   return ["Communication", "Teamwork", "Problem solving", "Time management", "Organisation", "Willingness to learn"];
 }
 
+
+function listItems(value, splitInline = false) {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+  let items = raw.split(/\r?\n+/).map(item => item.replace(/^\s*(?:[-*•▪]|\d+[.)])\s*/, "").trim()).filter(Boolean);
+  if (items.length === 1 && splitInline && /[·,;]/.test(items[0])) {
+    items = items[0].split(/[·,;]/).map(item => item.trim()).filter(Boolean);
+  }
+  return items;
+}
+function drawCvSection(doc, heading, value, accent, splitInline = false) {
+  if (!String(value || "").trim()) return;
+  if (doc.y > 690) doc.addPage();
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(accent).text(heading);
+  doc.moveDown(0.3);
+  const items = listItems(value, splitInline);
+  if (items.length > 1 || splitInline) {
+    items.forEach(item => {
+      if (doc.y > 735) doc.addPage();
+      doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+        .text("•  " + item, { indent: 8, hanging: 3, lineGap: 3 });
+    });
+  } else {
+    doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+      .text(items[0] || value, { lineGap: 3 });
+  }
+  doc.moveDown(0.8);
+}
+
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
     const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
@@ -70,9 +99,9 @@ function makePdf(order, outputOverride = null, watermark = false) {
     }
     const sections = [
       ["PROFESSIONAL SUMMARY", d.summary],
+      ["KEY SKILLS", d.skills || (d.documentType === "cv" ? suggestedSkills(d.targetRole).join(" · ") : "")],
       ["WORK EXPERIENCE", d.experience],
       ["EDUCATION", d.education],
-      ["SKILLS", d.skills || (d.documentType === "cv" ? suggestedSkills(d.targetRole).join(" · ") : "")],
       ["REFERENCES", d.documentType === "cv" ? (d.references || "Available upon request") : ""],
       ["ADDITIONAL DETAILS", d.extra]
     ];
@@ -114,14 +143,23 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.moveDown(2);
       doc.text("Tenant signature: ____________________________     Date: ______________");
     } else {
-      sections.forEach(([heading, value]) => {
-        if (value) {
-          doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
-          doc.moveDown(0.25);
-          doc.font("Helvetica").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
-          doc.moveDown();
-        }
-      });
+      if (d.documentType === "cv") {
+        drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), plainDesign ? "#222222" : accent);
+        drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), plainDesign ? "#222222" : accent, true);
+        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), plainDesign ? "#222222" : accent);
+        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), plainDesign ? "#222222" : accent);
+        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), plainDesign ? "#222222" : accent);
+        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), plainDesign ? "#222222" : accent);
+      } else {
+        sections.forEach(([heading, value]) => {
+          if (value) {
+            doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
+            doc.moveDown(0.25);
+            doc.font("Helvetica").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
+            doc.moveDown();
+          }
+        });
+      }
     }
     doc.end();
     stream.on("finish", () => resolve(output));
