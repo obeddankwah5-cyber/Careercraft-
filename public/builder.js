@@ -19,8 +19,14 @@ function render(){let t=$("type").value;$("photoField").hidden=t!=="cv";$("roleF
 let letterDraft=v("body")||["I am writing to apply for the "+(v("targetRole")||"available")+" position at "+(v("recipient")||"your organisation")+".",v("letterReason")?"I am interested in this opportunity because "+v("letterReason")+".":"",v("letterExperience")?"My relevant experience includes "+v("letterExperience")+".":"",v("letterSkills")?"My relevant skills include "+v("letterSkills")+".":"",v("education")?"My educational background includes "+v("education")+".":"","Thank you for considering my application."].filter(Boolean).join("\\n\\n");
 let tenancyTerms=v("terms")||"1. Rent and payment: The tenant shall pay the agreed rent on the agreed dates.\n2. Use of property: The premises shall be used for the agreed residential purpose and kept in reasonable condition.\n3. Utilities: Responsibility for water, electricity and other utility charges shall be agreed and recorded by both parties.\n4. Repairs and maintenance: The tenant shall promptly report damage; the parties shall follow their agreed and lawful repair responsibilities.\n5. Security deposit: Any deposit, deductions and refund arrangements shall be recorded in writing.\n6. Entry and inspection: The landlord shall give reasonable notice before entering, except in an emergency or as otherwise permitted by law.\n7. Subletting and alterations: The tenant shall obtain written consent before subletting or making material alterations.\n8. Termination and notice: Either party shall follow the notice requirements in this agreement and applicable Ghanaian law.\n9. Disputes: The parties shall first seek an amicable resolution and may seek legal advice where necessary.\n10. Changes to agreement: Any change shall be made in writing and acknowledged by both parties.";
 let a=t==="cv"?[["PROFESSIONAL SUMMARY",cvSummary],["KEY SKILLS",v("skills")||suggestedSkills(v("targetRole")).join("\n")],["WORK EXPERIENCE",v("experience")],["EDUCATION",v("education")],["REFERENCES",v("references")||"Available upon request"]]:t==="letter"?[["APPLICATION LETTER",letterDraft]]:[["LANDLORD",v("landlord")],["TENANT",v("tenant")],["PROPERTY ADDRESS",v("propertyAddress")],["RENT AND PAYMENT",v("rent")],["TENANCY PERIOD",v("period")],["TERMS AND CONDITIONS",tenancyTerms]];
-$("pv").innerHTML=a.map(([h,x])=>{const list=["KEY SKILLS","WORK EXPERIENCE","EDUCATION","REFERENCES","TERMS AND CONDITIONS"].includes(h);const items=String(x||"").split(/\\r?\\n+/).map(z=>z.replace(/^\\s*(?:[-*•▪]|\\d+[.)])\\s*/,"").trim()).filter(Boolean);if(list&&h==="KEY SKILLS"&&items.length===1)items[0]=items[0].split(/[·,;]/).map(z=>z.trim()).filter(Boolean);const content=list?(items.length?((h==="TERMS AND CONDITIONS"?"<ol>":"<ul>")+items.map(z=>"<li>"+esc(z)+"</li>").join("")+(h==="TERMS AND CONDITIONS"?"</ol>":"</ul>")):"<p>Your details will appear here.</p>"):"<p>"+(esc(x)||"Your details will appear here.")+"</p>";return "<h4 style='color:var(--template-accent)'>"+h+"</h4>"+content}).join("");applyAppearance()}
+$("pv").innerHTML=a.map(([h,x])=>{const list=["KEY SKILLS","WORK EXPERIENCE","EDUCATION","REFERENCES","TERMS AND CONDITIONS"].includes(h);const items=previewListItems(x);if(list&&h==="KEY SKILLS"&&items.length===1)items[0]=items[0].split(/[·,;]/).map(z=>z.trim()).filter(Boolean);const content=list?(items.length?((h==="TERMS AND CONDITIONS"?"<ol>":"<ul>")+items.map(z=>"<li>"+esc(z)+"</li>").join("")+(h==="TERMS AND CONDITIONS"?"</ol>":"</ul>")):"<p>Your details will appear here.</p>"):"<p>"+(esc(x)||"Your details will appear here.")+"</p>";return "<h4 style='color:"+(t==="tenancy"?"#000000":"var(--template-accent)")+"'>"+h+"</h4>"+content}).join("");applyAppearance()}
 
+function previewListItems(value){
+ const raw=String(value||"").trim();
+ if(!raw)return [];
+ const normalized=raw.replace(/\r\n?/g,"\n").replace(/([^\n])\s+(?=\d{1,2}[.)]\s+[A-Z])/g,"$1\n");
+ return normalized.split(/\n+/).map(item=>item.replace(/^\s*(?:[-*•▪]|\d{1,2}[.)])\s*/,"").trim()).filter(Boolean);
+}
 function sentenceList(value){return value.split(/\n+/).map(x=>x.trim()).filter(Boolean).join("; ")}
 function suggestedSkills(role){
  const r=(role||"").toLowerCase();
@@ -82,28 +88,29 @@ $("previewPdf").onclick=async()=>{
   $("error").textContent="";
   const button=$("previewPdf"),canvas=$("previewCanvas");
   button.disabled=true;button.textContent="Preparing your document preview…";
-  canvas.innerHTML='<div style="min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#34264b;font:600 15px Arial,sans-serif"><div style="width:34px;height:34px;border:4px solid #e7def2;border-top-color:#6943a8;border-radius:50%;animation:ccSpin .8s linear infinite"></div>Preparing your document preview…</div>';
+  canvas.innerHTML='<div style="min-height:260px;display:flex;align-items:center;justify-content:center;color:#34264b;font:600 15px Arial,sans-serif">Preparing your complete A4 PDF preview…</div>';
   $("pdfPreviewModal").hidden=false;
-  if(!document.getElementById("ccPreviewSpinnerStyle")){const style=document.createElement("style");style.id="ccPreviewSpinnerStyle";style.textContent="@keyframes ccSpin{to{transform:rotate(360deg)}}";document.head.appendChild(style)}
-  await new Promise(resolve=>setTimeout(resolve,3000));
-  canvas.innerHTML="";
-  const page=$("paperPreview").cloneNode(true);page.removeAttribute("id");
-  page.style.width="100%";page.style.maxWidth="794px";page.style.minHeight="1050px";page.style.margin="0 auto";page.style.boxSizing="border-box";
-  const wrap=document.createElement("div");
-  wrap.style.cssText="position:relative;max-width:794px;margin:0 auto;overflow:hidden;background:#fff";
-  wrap.appendChild(page);
-  const watermark=document.createElement("div");
-  watermark.setAttribute("aria-hidden","true");
-  watermark.style.cssText="position:absolute;inset:0;z-index:20;pointer-events:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));place-items:center;overflow:hidden";
-  for(let i=0;i<10;i++){
-    const mark=document.createElement("span");
-    mark.textContent="UNPAID PREVIEW";
-    mark.style.cssText="display:block;white-space:nowrap;transform:rotate(-32deg);font:700 clamp(18px,3vw,30px) Arial,sans-serif;letter-spacing:2px;color:rgba(150,20,20,.25);border:2px solid rgba(150,20,20,.20);padding:8px 12px";
-    watermark.appendChild(mark);
+  try{
+    const data=Object.fromEntries(ids.map(id=>[id,v(id)]));
+    Object.assign(data,appearance());
+    data.documentType=$("type").value;
+    data.template=template;
+    data.photoDataUrl=photoDataUrl;
+    const response=await fetch("/api/preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||"Could not prepare the preview.");
+    canvas.innerHTML="";
+    const frame=document.createElement("iframe");
+    frame.title="Complete unpaid document preview";
+    frame.src=result.url;
+    frame.style.cssText="display:block;width:100%;height:min(78vh,1000px);min-height:520px;border:0;background:#fff";
+    canvas.appendChild(frame);
+  }catch(error){
+    canvas.textContent=error.message||"Could not prepare the preview. Please try again.";
+  }finally{
+    button.disabled=false;
+    button.textContent="Preview your document";
   }
-  wrap.appendChild(watermark);
-  canvas.appendChild(wrap);
-  button.disabled=false;button.innerHTML='Preview your document <span style="float:right">Open temporary PDF preview ↗</span>';
 };
 
 $("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));Object.assign(d,appearance());d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
