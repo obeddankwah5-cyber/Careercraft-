@@ -26,7 +26,20 @@ $("previewPdf").onclick=()=>{
   const canvas=$("previewCanvas");canvas.innerHTML="";
   const page=$("paperPreview").cloneNode(true);page.removeAttribute("id");
   page.style.width="100%";page.style.maxWidth="794px";page.style.minHeight="1050px";page.style.margin="0 auto";page.style.boxSizing="border-box";
-  canvas.appendChild(page);
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:relative;max-width:794px;margin:0 auto;overflow:hidden;background:#fff";
+  wrap.appendChild(page);
+  const watermark=document.createElement("div");
+  watermark.setAttribute("aria-hidden","true");
+  watermark.style.cssText="position:absolute;inset:0;z-index:20;pointer-events:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));place-items:center;overflow:hidden";
+  for(let i=0;i<10;i++){
+    const mark=document.createElement("span");
+    mark.textContent="UNPAID PREVIEW";
+    mark.style.cssText="display:block;white-space:nowrap;transform:rotate(-32deg);font:700 clamp(18px,3vw,30px) Arial,sans-serif;letter-spacing:2px;color:rgba(150,20,20,.25);border:2px solid rgba(150,20,20,.20);padding:8px 12px";
+    watermark.appendChild(mark);
+  }
+  wrap.appendChild(watermark);
+  canvas.appendChild(wrap);
   $("pdfPreviewModal").hidden=false;
 };
 
