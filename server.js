@@ -126,6 +126,7 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
     const number = (index + 1) + ".  ";
     const fullText = number + cleanClause;
     const options = { width: width - 8, indent: 8, hanging: 4, lineGap: 3, align: "left" };
+    doc.font("Times-Roman").fontSize(body);
     const requiredHeight = doc.heightOfString(fullText, options) + 18;
     const bottom = doc.page.height - doc.page.margins.bottom;
     const usableHeight = bottom - doc.page.margins.top;
@@ -136,12 +137,14 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
       doc.addPage();
     }
 
-    doc.font("Times-Roman").fontSize(body).fillColor("#111111");
     if (label) {
-      doc.text(number + label, options).font("Times-Roman")
-        .text(" " + description, { width: width - 8, indent: 8, lineGap: 3, align: "left" });
+      doc.font("Times-Bold").fontSize(body).fillColor("#111111")
+        .text(number + label, { ...options, continued: true });
+      doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+        .text(" " + description, { width: width - 8, lineGap: 3, align: "left" });
     } else {
-      doc.text(number + description, options);
+      doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+        .text(number + description, options);
     }
     doc.moveDown(0.9);
   });
