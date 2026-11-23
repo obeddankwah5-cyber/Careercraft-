@@ -11,7 +11,7 @@ const ORDER_FILE = path.join(DATA_DIR, "orders.json");
 const PUBLIC_URL = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "1mb", verify: (req, res, buf) => { req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -178,10 +178,10 @@ app.post("/api/payments/webhook", express.raw({ type: "application/json" }), asy
   const secret = process.env.PAYSTACK_SECRET_KEY;
   const signature = req.headers["x-paystack-signature"];
   if (!secret || !signature) return res.sendStatus(401);
-  const expected = crypto.createHmac("sha512", secret).update(req.body).digest("hex");
+  const expected = crypto.createHmac("sha512", secret).update(req.rawBody || Buffer.alloc(0)).digest("hex");
   if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return res.sendStatus(401);
   try {
-    const event = JSON.parse(req.body.toString());
+    const event = JSON.parse((req.rawBody || Buffer.alloc(0)).toString());
     if (event.event === "charge.success" && event.data && event.data.reference && await verifyPayment(event.data.reference)) {
       const orders = readOrders();
       const order = orders[event.data.reference];
