@@ -34,10 +34,10 @@ function makePdf(order) {
     const d = order.data;
     const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
     const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
-    const accent=palette[designNumber-1];
+    const plainDesign=designNumber>=18;\n    const accent=plainDesign?"#222222":palette[designNumber-1];
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
-    if (d.documentType !== "letter") {
+    if (d.documentType !== "letter" && !plainDesign) {
       doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
       doc.moveDown(0.35);
       if (d.email || d.phone || d.location) {
@@ -56,21 +56,21 @@ function makePdf(order) {
     ];
     if (d.documentType === "letter") {
       const layout = (designNumber - 1) % 5;
-      if (layout === 1 || layout === 3) {
+      if (!plainDesign && (layout === 1 || layout === 3)) {
         doc.save().fillColor(accent).rect(58, 48, 54, 8).fill().restore();
         doc.font("Helvetica-Bold").fontSize(8).fillColor("#52606a").text("APPLICATION LETTER", 120, 47);
         doc.y = 83;
       }
       doc.font("Helvetica").fontSize(10).fillColor("#111827");
       const sender = [clean(d.fullName), clean(d.location), clean(d.phone), clean(d.email)].filter(Boolean).join("\n");
-      doc.text(sender, { align: layout === 2 ? "left" : "right", lineGap: 3 });
+      doc.text(sender, { align: plainDesign || layout !== 2 ? "right" : "left", lineGap: 3 });
       doc.moveDown(1.5);
       doc.text(clean(d.recipient), { lineGap: 3 });
       doc.moveDown(1.5);
       doc.text("Dear Sir/Madam,");
       doc.moveDown(1.2);
       doc.font("Helvetica-Bold").fontSize(11).fillColor("#111827")
-        .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: layout === 2 ? "left" : "center", underline: layout !== 2 });
+        .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: !plainDesign && layout === 2 ? "left" : plainDesign ? "left" : "center", underline: plainDesign || layout !== 2 });
       doc.moveDown(1.2);
       doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
         .text(clean(d.body, 12000), { lineGap: 5, align: "left" });
@@ -94,7 +94,7 @@ function makePdf(order) {
     } else {
       sections.forEach(([heading, value]) => {
         if (value) {
-          doc.font("Helvetica-Bold").fontSize(11).fillColor(accent).text(heading);
+          doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
           doc.moveDown(0.25);
           doc.font("Helvetica").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
           doc.moveDown();
