@@ -137,13 +137,25 @@ app.post("/api/preview", async (req, res) => {
     if (!data.fullName) return res.status(400).json({ error: "Enter your name before previewing." });
     await makePdf({ token: previewId, data }, output, true);
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Content-Disposition", 'inline; filename="CareerCraft-unpaid-preview.pdf"');
-    res.type("application/pdf");
-    res.sendFile(output, error => { fs.promises.unlink(output).catch(() => {}); if (error && !res.headersSent) res.status(500).end("Preview could not be opened."); });
+    res.json({ url: "/api/preview/" + previewId });
   } catch (error) {
     fs.promises.unlink(output).catch(() => {});
     res.status(500).json({ error: "Could not create the PDF preview. Please try again." });
   }
+});
+
+app.get("/api/preview/:id", (req, res) => {
+  const id = String(req.params.id || "");
+  if (!/^[a-f0-9]{32}$/.test(id)) return res.status(404).end("Preview not found.");
+  const file = path.join(DATA_DIR, "preview-" + id + ".pdf");
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Disposition", 'inline; filename="CareerCraft-unpaid-preview.pdf"');
+  res.type("application/pdf");
+  res.sendFile(file, error => {
+    fs.promises.unlink(file).catch(() => {});
+    if (error && !res.headersSent) res.status(404).end("This preview has expired. Please create a new one.");
+  });
 });
 
 app.post("/api/payments/initialize", async (req, res) => {
