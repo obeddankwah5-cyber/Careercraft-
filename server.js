@@ -135,9 +135,23 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.font("Helvetica").fontSize(11).fillColor("#111827");
       doc.text("This document records the proposed tenancy details supplied by the parties. Both parties should review the terms and obtain appropriate legal advice before signing.", { lineGap: 4 });
       doc.moveDown();
-      [["LANDLORD", d.landlord], ["TENANT", d.tenant], ["PROPERTY ADDRESS", d.propertyAddress], ["RENT AND PAYMENT", d.rent], ["TENANCY PERIOD", d.period], ["TERMS", d.terms]].forEach(([label, value]) => {
+      [["LANDLORD", d.landlord], ["TENANT", d.tenant], ["PROPERTY ADDRESS", d.propertyAddress], ["RENT AND PAYMENT", d.rent], ["TENANCY PERIOD", d.period]].forEach(([label, value]) => {
         if (value) { doc.font("Helvetica-Bold").text(label); doc.font("Helvetica").text(clean(value, 4000)); doc.moveDown(0.7); }
       });
+      if (d.terms) {
+        doc.moveDown(0.3);
+        doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign ? "#222222" : accent).text("TERMS AND CONDITIONS");
+        doc.moveDown(0.35);
+        const clauses = listItems(d.terms).length > 1 ? listItems(d.terms) : String(d.terms).split(/\\r?\\n+/).map(x => x.trim()).filter(Boolean);
+        clauses.forEach((clause, index) => {
+          if (doc.y > 735) doc.addPage();
+          const text = clause.replace(/^\\d+[.)]\\s*/, "");
+          doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+            .text((index + 1) + ".  " + text, { indent: 8, hanging: 4, lineGap: 3 });
+          doc.moveDown(0.25);
+        });
+        doc.moveDown(0.7);
+      }
       doc.moveDown(2);
       doc.text("Landlord signature: __________________________     Date: ______________");
       doc.moveDown(2);
