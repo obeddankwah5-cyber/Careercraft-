@@ -61,7 +61,7 @@ function drawCvSection(doc, heading, value, accent, splitInline = false, bodySiz
         .text("•  " + item, { indent: 8, hanging: 3, lineGap: 3 });
     });
   } else {
-    doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827")
+    doc.font("Times-Roman").fontSize(bodySize).fillColor("#111827")
       .text(items[0] || value, { lineGap: 3 });
   }
   doc.moveDown(0.8);
@@ -146,7 +146,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.font("Times-Bold").fontSize(headingSize).fillColor("#111827")
         .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: !plainDesign && layout === 2 ? "left" : plainDesign ? "left" : "center", underline: plainDesign || layout !== 2 });
       doc.moveDown(1.2);
-      doc.font("Times-Roman").fontSize(10.5).fillColor("#111827")
+      doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827")
         .text(clean(d.body, 12000), { lineGap: 5, align: "left" });
       doc.moveDown(1.5);
       doc.text("Yours faithfully,");
@@ -158,16 +158,16 @@ function makePdf(order, outputOverride = null, watermark = false) {
       if (d.documentType === "cv") {
         drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), accent, false, fontSize, headingSize);
         drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
-        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
-        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
-        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), plainDesign ? "#222222" : accent, fontSize, headingSize);
-        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
+        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), accent, false, fontSize, headingSize);
+        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), accent, false, fontSize, headingSize);
+        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
+        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), accent, false, fontSize, headingSize);
       } else {
         sections.forEach(([heading, value]) => {
           if (value) {
-            doc.font("Times-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
+            doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text(heading);
             doc.moveDown(0.25);
-            doc.font("Times-Roman").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
+            doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
             doc.moveDown();
           }
         });
