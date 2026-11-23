@@ -37,14 +37,16 @@ function makePdf(order) {
     const accent=palette[designNumber-1];
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
-    doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
-    doc.moveDown(0.35);
-    if (d.email || d.phone || d.location) {
-      doc.font("Helvetica").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
+    if (d.documentType !== "letter") {
+      doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
+      doc.moveDown(0.35);
+      if (d.email || d.phone || d.location) {
+        doc.font("Helvetica").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
+      }
+      doc.moveDown();
+      doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor(accent).lineWidth(designNumber%4===0?2:1).stroke();
+      doc.moveDown();
     }
-    doc.moveDown();
-    doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor(accent).lineWidth(designNumber%4===0?2:1).stroke();
-    doc.moveDown();
     const sections = [
       ["PROFESSIONAL SUMMARY", d.summary],
       ["WORK EXPERIENCE", d.experience],
@@ -53,15 +55,26 @@ function makePdf(order) {
       ["ADDITIONAL DETAILS", d.extra]
     ];
     if (d.documentType === "letter") {
-      doc.font("Helvetica").fontSize(11).fillColor("#111827");
-      doc.text(clean(d.date), { align: "right" });
-      doc.moveDown();
-      doc.text(clean(d.recipient));
-      doc.moveDown();
-      doc.text(clean(d.subject), { underline: true });
-      doc.moveDown();
-      doc.text(clean(d.body, 12000), { lineGap: 5 });
-      doc.moveDown();
+      const layout = (designNumber - 1) % 5;
+      if (layout === 1 || layout === 3) {
+        doc.save().fillColor(accent).rect(58, 48, 54, 8).fill().restore();
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("#52606a").text("APPLICATION LETTER", 120, 47);
+        doc.y = 83;
+      }
+      doc.font("Helvetica").fontSize(10).fillColor("#111827");
+      const sender = [clean(d.fullName), clean(d.location), clean(d.phone), clean(d.email)].filter(Boolean).join("\n");
+      doc.text(sender, { align: layout === 2 ? "left" : "right", lineGap: 3 });
+      doc.moveDown(1.5);
+      doc.text(clean(d.recipient), { lineGap: 3 });
+      doc.moveDown(1.5);
+      doc.text("Dear Sir/Madam,");
+      doc.moveDown(1.2);
+      doc.font("Helvetica-Bold").fontSize(11).fillColor("#111827")
+        .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: layout === 2 ? "left" : "center", underline: layout !== 2 });
+      doc.moveDown(1.2);
+      doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+        .text(clean(d.body, 12000), { lineGap: 5, align: "left" });
+      doc.moveDown(1.5);
       doc.text("Yours faithfully,");
       doc.moveDown(2);
       doc.font("Helvetica-Bold").text(clean(d.fullName));
