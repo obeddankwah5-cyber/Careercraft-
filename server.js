@@ -37,15 +37,17 @@ function makePdf(order) {
     const plainDesign=designNumber>=18;\n    const accent=plainDesign?"#222222":palette[designNumber-1];
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
-    if (d.documentType !== "letter" && !plainDesign) {
-      doc.font("Helvetica-Bold").fontSize(20).fillColor(accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
+    if (d.documentType !== "letter") {
+      doc.font("Helvetica-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
       doc.moveDown(0.35);
       if (d.email || d.phone || d.location) {
         doc.font("Helvetica").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
       }
       doc.moveDown();
-      doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor(accent).lineWidth(designNumber%4===0?2:1).stroke();
-      doc.moveDown();
+      if (!plainDesign) {
+        doc.moveTo(58, doc.y).lineTo(537, doc.y).strokeColor(accent).lineWidth(designNumber%4===0?2:1).stroke();
+        doc.moveDown();
+      }
     }
     const sections = [
       ["PROFESSIONAL SUMMARY", d.summary],
