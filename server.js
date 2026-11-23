@@ -48,20 +48,20 @@ function listItems(value, splitInline = false) {
   }
   return items;
 }
-function drawCvSection(doc, heading, value, accent, splitInline = false) {
+function drawCvSection(doc, heading, value, accent, splitInline = false, bodySize = 12, headingSize = 14) {
   if (!String(value || "").trim()) return;
   if (doc.y > 690) doc.addPage();
-  doc.font("Helvetica-Bold").fontSize(11).fillColor(accent).text(heading);
+  doc.font("Times-Bold").fontSize(headingSize).fillColor(accent).text(heading);
   doc.moveDown(0.3);
   const items = listItems(value, splitInline);
   if (items.length > 1 || splitInline) {
     items.forEach(item => {
       if (doc.y > 735) doc.addPage();
-      doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+      doc.font("Times-Roman").fontSize(bodySize).fillColor("#111827")
         .text("•  " + item, { indent: 8, hanging: 3, lineGap: 3 });
     });
   } else {
-    doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+    doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827")
       .text(items[0] || value, { lineGap: 3 });
   }
   doc.moveDown(0.8);
@@ -93,7 +93,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
     if (watermark) {
-      const stamp = () => { doc.save().fillColor("#a0a0a0").opacity(0.22).font("Helvetica-Bold").fontSize(34).rotate(-32, { origin: [297, 421] }).text("UNPAID PREVIEW", 75, 390, { width: 450, align: "center" }).restore(); };
+      const stamp = () => { doc.save().fillColor("#a0a0a0").opacity(0.22).font("Times-Bold").fontSize(34).rotate(-32, { origin: [297, 421] }).text("UNPAID PREVIEW", 75, 390, { width: 450, align: "center" }).restore(); };
       doc.on("pageAdded", stamp);
       stamp();
     }
@@ -109,10 +109,10 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
     if (d.documentType !== "letter") {
-      doc.font("Helvetica-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
+      doc.font("Times-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
       doc.moveDown(0.35);
       if (d.email || d.phone || d.location) {
-        doc.font("Helvetica").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
+        doc.font("Times-Roman").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
       }
       doc.moveDown();
       if (!plainDesign) {
@@ -132,10 +132,10 @@ function makePdf(order, outputOverride = null, watermark = false) {
       const layout = (designNumber - 1) % 5;
       if (!plainDesign && (layout === 1 || layout === 3)) {
         doc.save().fillColor(accent).rect(58, 48, 54, 8).fill().restore();
-        doc.font("Helvetica-Bold").fontSize(8).fillColor("#52606a").text("APPLICATION LETTER", 120, 47);
+        doc.font("Times-Bold").fontSize(8).fillColor("#52606a").text("APPLICATION LETTER", 120, 47);
         doc.y = 83;
       }
-      doc.font("Helvetica").fontSize(10).fillColor("#111827");
+      doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827");
       const sender = [clean(d.fullName), clean(d.location), clean(d.phone), clean(d.email)].filter(Boolean).join("\n");
       doc.text(sender, { align: plainDesign || layout !== 2 ? "right" : "left", lineGap: 3 });
       doc.moveDown(1.5);
@@ -143,31 +143,31 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.moveDown(1.5);
       doc.text("Dear Sir/Madam,");
       doc.moveDown(1.2);
-      doc.font("Helvetica-Bold").fontSize(11).fillColor("#111827")
+      doc.font("Times-Bold").fontSize(headingSize).fillColor("#111827")
         .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: !plainDesign && layout === 2 ? "left" : plainDesign ? "left" : "center", underline: plainDesign || layout !== 2 });
       doc.moveDown(1.2);
-      doc.font("Helvetica").fontSize(10.5).fillColor("#111827")
+      doc.font("Times-Roman").fontSize(10.5).fillColor("#111827")
         .text(clean(d.body, 12000), { lineGap: 5, align: "left" });
       doc.moveDown(1.5);
       doc.text("Yours faithfully,");
       doc.moveDown(2);
-      doc.font("Helvetica-Bold").text(clean(d.fullName));
+      doc.font("Times-Bold").text(clean(d.fullName));
     } else if (d.documentType === "tenancy") {
       drawTenancyAgreement(doc,d,accent,fontSize,headingSize);
     } else {
       if (d.documentType === "cv") {
-        drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), plainDesign ? "#222222" : accent);
-        drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), plainDesign ? "#222222" : accent, true);
-        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), plainDesign ? "#222222" : accent);
-        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), plainDesign ? "#222222" : accent);
-        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), plainDesign ? "#222222" : accent);
-        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), plainDesign ? "#222222" : accent);
+        drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), accent, false, fontSize, headingSize);
+        drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
+        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
+        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
+        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), plainDesign ? "#222222" : accent, fontSize, headingSize);
+        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), plainDesign ? "#222222" : accent, fontSize, headingSize);
       } else {
         sections.forEach(([heading, value]) => {
           if (value) {
-            doc.font("Helvetica-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
+            doc.font("Times-Bold").fontSize(11).fillColor(plainDesign?"#222222":accent).text(heading);
             doc.moveDown(0.25);
-            doc.font("Helvetica").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
+            doc.font("Times-Roman").fontSize(10.5).fillColor("#111827").text(clean(value, 6000), { lineGap: 3 });
             doc.moveDown();
           }
         });
