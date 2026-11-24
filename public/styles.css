@@ -134,7 +134,7 @@
 .intro-brand-lockup{width:100%;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:18px;margin:0 auto}
 .intro-writing-word{width:min(62vw,440px);height:auto;display:block;flex:0 1 440px}
 .intro-word-writing{width:100%;height:auto;display:block;overflow:visible}
-.intro-lettering text{font-family:Manrope,Arial,sans-serif;font-size:58px;font-weight:800;letter-spacing:-3.2px;fill:transparent;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:115;stroke-dashoffset:115;animation:letterInk .48s ease-out forwards}
+.intro-lettering text{font-family:Manrope,Arial,sans-serif;font-size:58px;font-weight:800;letter-spacing:-3.2px;fill:transparent;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:300;stroke-dashoffset:300;animation:letterInk .48s ease-out forwards}
 .intro-lettering text:nth-child(1){animation-delay:.55s}
 .intro-lettering text:nth-child(2){animation-delay:1.08s}
 .intro-lettering text:nth-child(3){animation-delay:1.61s}
@@ -147,7 +147,7 @@
 .intro-lettering text:nth-child(10){animation-delay:5.32s}
 .intro-lettering text:nth-child(11){animation-delay:5.85s}
 .intro-writing-hand{transform:translate(0,8px);animation:introPenTravel 5.83s cubic-bezier(.45,.05,.55,.95) .5s forwards}
-@keyframes letterInk{0%{stroke-dashoffset:115;fill:transparent}85%{stroke-dashoffset:0;fill:transparent}100%{stroke-dashoffset:0;fill:#fff}}
+@keyframes letterInk{0%{stroke-dashoffset:300;fill:transparent}85%{stroke-dashoffset:0;fill:transparent}100%{stroke-dashoffset:0;fill:#fff}}
 @keyframes introPenTravel{0%{transform:translate(0,8px) rotate(-10deg)}100%{transform:translate(350px,8px) rotate(2deg)}}
 @media(max-width:600px){
  .intro-brand-lockup{gap:10px;width:100%}
