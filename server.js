@@ -57,6 +57,65 @@ function listItems(value, splitInline = false) {
   }
   return items;
 }
+function cvRows(value, kind) {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+  const lines = raw.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const splitRow = line => line.split(/\s*\|\s*|\t+|\s+;\s*/).map(x => x.trim()).filter(Boolean);
+  const explicit = lines.map(splitRow);
+  if (explicit.length && explicit.every(row => row.length >= 3)) {
+    return explicit.map(row => {
+      const yearFirst = /\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:(?:19|20)\d{2}|present|current))?\b/i.test(row[0]);
+      return kind === "experience"
+        ? (yearFirst ? [row[1], row[2], row[0]] : [row[0], row[1], row[2]])
+        : (yearFirst ? [row[1], row[2], row[0]] : [row[0], row[1], row[2]]);
+    });
+  }
+  const flat = lines.flatMap(line => line.split(/\s*\|\s*|\t+/).map(x => x.trim()).filter(Boolean));
+  const rows = [];
+  for (let i = 0; i + 2 < flat.length; i += 3) {
+    const yearFirst = /\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:(?:19|20)\d{2}|present|current))?\b/i.test(flat[i]);
+    rows.push(yearFirst ? [flat[i+1], flat[i+2], flat[i]] : [flat[i], flat[i+1], flat[i+2]]);
+  }
+  if (!rows.length) rows.push([flat[0] || "", flat[1] || "", flat[2] || ""]);
+  return rows;
+}
+
+function drawCvTable(doc, heading, value, kind, bodySize = 12, headingSize = 14) {
+  if (!String(value || "").trim()) return;
+  if (doc.y > 680) doc.addPage();
+  doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000").text(heading);
+  doc.moveDown(0.35);
+  const left = doc.page.margins.left;
+  const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const headers = kind === "experience" ? ["Company", "Position", "Year"] : ["School", "Certificate", "Year"];
+  const widths = [width * 0.42, width * 0.36, width * 0.22];
+  const rows = cvRows(value, kind);
+  const drawCells = (cells, bold = false) => {
+    const y = doc.y;
+    let maxHeight = 0;
+    let x = left;
+    cells.forEach((cell, i) => {
+      doc.font(bold ? "Times-Bold" : "Times-Roman").fontSize(bodySize).fillColor("#111827");
+      const h = doc.heightOfString(String(cell || ""), { width: widths[i] - 8, lineGap: 2 });
+      maxHeight = Math.max(maxHeight, h);
+      doc.text(String(cell || ""), x, y, { width: widths[i] - 8, lineGap: 2 });
+      x += widths[i];
+    });
+    doc.y = y + maxHeight + 8;
+  };
+  drawCells(headers, true);
+  doc.moveTo(left, doc.y - 4).lineTo(left + width, doc.y - 4).strokeColor("#999999").lineWidth(0.6).stroke();
+  rows.forEach(row => {
+    if (doc.y > 735) {
+      doc.addPage();
+      drawCells(headers, true);
+      doc.moveTo(left, doc.y - 4).lineTo(left + width, doc.y - 4).strokeColor("#999999").lineWidth(0.6).stroke();
+    }
+    drawCells(row);
+  });
+  doc.moveDown(0.6);
+}
 function drawCvSection(doc, heading, value, accent, splitInline = false, bodySize = 12, headingSize = 14) {
   if (!String(value || "").trim()) return;
   if (doc.y > 690) doc.addPage();
@@ -246,8 +305,8 @@ function makePdf(order, outputOverride = null, watermark = false) {
       if (d.documentType === "cv") {
         drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), accent, false, fontSize, headingSize);
         drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
-        drawCvSection(doc, "WORK EXPERIENCE", clean(d.experience, 6000), accent, false, fontSize, headingSize);
-        drawCvSection(doc, "EDUCATION", clean(d.education, 6000), accent, false, fontSize, headingSize);
+        drawCvTable(doc, "WORK EXPERIENCE", clean(d.experience, 6000), "experience", fontSize, headingSize);
+        drawCvTable(doc, "EDUCATION", clean(d.education, 6000), "education", fontSize, headingSize);
         drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
         drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), accent, false, fontSize, headingSize);
       } else {
