@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://careercraft-sf7y.onrender.com/sitemap.xml
