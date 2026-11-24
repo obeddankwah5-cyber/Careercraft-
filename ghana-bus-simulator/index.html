@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101820"><title>Ghana Bus Simulator — 3D Mobile Prototype</title>
+<style>
+*{box-sizing:border-box;touch-action:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;color:white;font-family:system-ui,Arial}
+#view{position:absolute;inset:0}canvas{display:block}
+.hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.panel{background:#07131ddd;border:1px solid #ffffff45;border-radius:12px;padding:8px 11px;font-size:12px;backdrop-filter:blur(5px)}
+#stats{font-size:14px;font-weight:800}
+#camera{position:fixed;top:70px;right:10px;border:1px solid #ffffff66;border-radius:10px;padding:9px 12px;background:#07131ddd;color:white}
+.controls{position:fixed;bottom:12px;left:12px;right:12px;display:flex;align-items:end;justify-content:space-between}
+#wheel{width:min(34vw,145px);height:min(34vw,145px);border:10px solid #202a31;border-radius:50%;background:radial-gradient(circle,#202a31 0 22%,#657078 23% 28%,transparent 29%);position:relative;box-shadow:0 5px 15px #0009}
+#wheel:before,#wheel:after{content:"";position:absolute;left:calc(50% - 5px);top:8%;width:10px;height:84%;background:#28343b;border-radius:8px}#wheel:after{transform:rotate(90deg)}
+#hub{position:absolute;inset:39%;border-radius:50%;background:#aeb9bd;border:5px solid #1c272d}
+.pedals{display:flex;gap:9px}.pedal{width:min(18vw,78px);height:105px;border:2px solid #ffffff55;border-radius:14px;background:linear-gradient(#34444d,#111b22);color:white;font-weight:800;box-shadow:0 5px 12px #0008}
+.pedal small{display:block;font-size:10px;font-weight:500}
+#gear{position:fixed;bottom:165px;right:12px;border-radius:10px;padding:8px;background:#07131ddd;color:white;border:1px solid #ffffff55}
+#talkPanel button{background:#d6a83f;color:#161616;border:0;border-radius:7px;padding:7px 10px;font-weight:700}\n#horn{position:fixed;bottom:165px;left:12px;border-radius:10px;padding:9px 13px;background:#07131ddd;color:white;border:1px solid #ffffff55}
+#hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#07131dcc;padding:12px 16px;border-radius:12px;text-align:center;font-size:13px;pointer-events:none}
+@media(orientation:landscape){#wheel{width:120px;height:120px}.pedal{height:88px}.controls{bottom:8px}#gear,#horn{bottom:112px}}
+</style></head>
+<body>
+<div id="view"></div>
+<div class="hud"><div class="panel">🇬🇭 <b>GHANA BUS SIMULATOR</b><br>3D Cockpit Prototype</div><div class="panel" id="stats">0 km/h<br>Gear N</div><div class="panel" id="passengers">Passengers: 0<br>Fare: GH₵0.00</div><div class="panel" id="trafficStatus">Traffic: Active<br>Road rules: ON</div><div class="panel" id="roadStatus">Road: Normal</div></div>
+<button id="camera">CAMERA: CHASE</button>
+<button id="horn">HORN</button><div id="extraControls" style="position:fixed;top:164px;left:10px;display:flex;flex-direction:column;gap:5px;z-index:10"><button id="indicators">INDICATORS: OFF</button><button id="hazards">HAZARDS: OFF</button><button id="wipers">WIPERS: OFF</button><button id="weather">WEATHER: CLEAR</button><button id="mate">MATE: CALL</button>
+<button id="dialogue">PASSENGER TALK</button>
+<div id="talkPanel" style="position:fixed;left:50%;bottom:185px;transform:translateX(-50%);width:min(88vw,420px);z-index:20;background:#07131deF;color:#fff;border:1px solid #e2bd56;border-radius:12px;padding:10px 12px;font:14px system-ui;display:none;box-shadow:0 4px 18px #0008">
+ <b style="color:#f2cf70">MATE / PASSENGER</b><div id="talkText" style="margin-top:5px">Conversation</div>
+ <div style="display:flex;gap:6px;margin-top:8px"><button id="talkReply">REPLY</button><button id="talkClose">CLOSE</button></div>
+</div><button id="fareDown">FARE −</button><button id="fareUp">FARE +</button><button id="collectFares">COLLECT FARES</button><button id="luggage">LUGGAGE: 0/8</button><button id="damage">DAMAGE: 0%</button><button id="repair">ROADSIDE REPAIR</button><button id="fuel">FUEL: 100%</button><button id="refuel">REFUEL</button><button id="destination">DESTINATION: NEXT STOP</button><button id="inspection">POLICE: INSPECTION</button><button id="company">COMPANY: OPEN</button><button id="fleet">BUS MODEL: TROTRO</button></div><button id="doors" style="position:fixed;top:70px;left:10px;border-radius:10px;padding:9px 12px;background:#07131ddd;color:white;border:1px solid #ffffff55">DOORS: CLOSED</button><button id="lights" style="position:fixed;top:116px;left:10px;border-radius:10px;padding:9px 12px;background:#07131ddd;color:white;border:1px solid #ffffff55">LIGHTS: OFF</button>
+<select id="gear"><option value="N">N</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="R">R</option></select>
+<button id="missionBtn" style="position:fixed;right:10px;top:70px;z-index:12;background:#124b36;color:#fff;border:1px solid #ffffff66;border-radius:10px;padding:9px">MISSIONS</button>
+<div id="missionPanel" style="display:none;position:fixed;right:10px;top:112px;z-index:35;width:min(300px,82vw);background:#071b18ee;border:1px solid #e4c15a;border-radius:13px;padding:12px;color:#fff;font:13px system-ui">
+<b style="color:#f2d16c;font-size:16px">🇬🇭 ACCRA ROUTE CONTRACT</b>
+<div style="margin:8px 0;line-height:1.55">Accra Central → Circle Market → Kaneshie<br>Passengers: 8 · Test reward: GH₵180 + 75 XP</div>
+<div id="missionStatus" style="color:#b9e5c7;margin:8px 0">Accept the route to begin.</div>
+<button id="acceptMission">ACCEPT CONTRACT</button> <button id="closeMission">CLOSE</button>
+</div><div id="hint">Drag the wheel to steer. Hold accelerator to move.</div><div id="fleetPanel" style="display:none;position:fixed;right:10px;top:12px;z-index:31;width:min(270px,75vw);background:#101b25ee;color:#fff;border:1px solid #ffffff55;border-radius:12px;padding:12px;font:13px Arial">
+<b style="font-size:16px">CHOOSE YOUR BUS</b>
+<div style="margin:8px 0;color:#cbd5e1">Select a Ghanaian transport style for your current vehicle.</div>
+<button class="fleetChoice" data-model="TROTRO">TROTRO · FREE</button>
+<button class="fleetChoice" data-model="VIP">VIP EXPRESS · GH₵800</button>
+<button class="fleetChoice" data-model="STC">STC COACH · GH₵1,200</button>
+<button class="fleetChoice" data-model="2M EXPRESS">2M EXPRESS · GH₵1,000</button>
+<div id="fleetMessage" style="margin-top:8px"></div>
+<button id="closeFleet">CLOSE</button>
+</div><div id="companyPanel" style="display:none;position:fixed;right:10px;top:12px;z-index:30;width:min(290px,78vw);max-height:75vh;overflow:auto;background:#101b25ee;color:#fff;border:1px solid #ffffff55;border-radius:12px;padding:12px;font:13px Arial">
+<b style="font-size:16px">🇬🇭 TRANSPORT COMPANY</b>
+<div id="companyStats" style="line-height:1.7;margin:8px 0">Cash: GH₵5,000<br>Fleet: 1 bus<br>Drivers: 0</div>
+<label>Operating route</label><select id="companyRoute" style="display:block;width:100%;margin:5px 0 10px;padding:8px"><option>Accra Central – Madina</option><option>Accra – Tema</option><option>Accra – Kasoa</option><option>Accra – Cape Coast</option><option>Accra – Kumasi</option></select>
+<button id="hireDriver">HIRE DRIVER · GH₵500</button>
+<button id="buyBus">BUY USED BUS · GH₵3,500</button>
+<button id="closeCompany">CLOSE</button>
+<div style="font-size:11px;color:#cbd5e1;margin-top:8px">Prototype management: purchases and hiring are session-only. Route selection is a company setting, not yet connected to world navigation.</div>
+</div>
+<div class="controls"><div id="wheel"><div id="hub"></div></div><div class="pedals"><button class="pedal" id="brake">BRAKE<small>Hold</small></button><button class="pedal" id="gas">ACCELERATOR<small>Hold</small></button></div></div>
+<script type="module">
+// V34 mobile test diagnostics: capture errors and expose a copyable report.
+const gbsDebug={errors:[],warnings:[],started:new Date().toISOString(),frames:0,fps:0,lastFpsAt:performance.now()};
+function gbsLog(kind,message){
+ const item={time:new Date().toLocaleTimeString(),kind,message:String(message).slice(0,700)};
+ (kind==='ERROR'?gbsDebug.errors:gbsDebug.warnings).push(item);
+ if(gbsDebug.errors.length+gbsDebug.warnings.length>80){gbsDebug.errors.splice(0,Math.max(0,gbsDebug.errors.length-50));gbsDebug.warnings.splice(0,Math.max(0,gbsDebug.warnings.length-30));}
+ renderGbsDebug();
+}
+addEventListener('error',e=>gbsLog('ERROR',(e.message||'Script error')+' @ '+(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
+addEventListener('unhandledrejection',e=>gbsLog('ERROR','Unhandled promise: '+(e.reason?.stack||e.reason||'unknown')));
+function renderGbsDebug(){
+ const s=document.getElementById('debugSummary'),l=document.getElementById('debugLog');if(!s||!l)return;
+ s.innerHTML='Status: '+(gbsDebug.errors.length?'ERRORS FOUND':'No captured errors')+'<br>Errors: '+gbsDebug.errors.length+' · Warnings: '+gbsDebug.warnings.length+'<br>FPS: '+(gbsDebug.fps||'measuring')+'<br>Screen: '+innerWidth+' × '+innerHeight+'<br>Connection: '+(navigator.onLine?'online':'offline')+'<br>WebGL: '+(document.querySelector('canvas')?'canvas created':'waiting for canvas');
+ const all=[...gbsDebug.errors,...gbsDebug.warnings].slice(-35);
+ l.textContent=all.length?all.map(x=>'['+x.time+'] '+x.kind+': '+x.message).join('\\n'):'No errors recorded.';
+}
+document.getElementById('debugToggle').onclick=()=>{document.getElementById('debugPanel').style.display='block';renderGbsDebug()};
+document.getElementById('debugClose').onclick=()=>document.getElementById('debugPanel').style.display='none';
+document.getElementById('clearDebug').onclick=()=>{gbsDebug.errors=[];gbsDebug.warnings=[];renderGbsDebug()};
+document.getElementById('testDebug').onclick=()=>{gbsLog('WARNING','This is a sample test entry. It is safe to clear.');};
+document.getElementById('copyDebug').onclick=async()=>{
+ const report=['GHANA BUS SIMULATOR DEBUG REPORT','Build: V34 First Accra Mission + Diagnostics','Started: '+gbsDebug.started,'Browser: '+navigator.userAgent,'Screen: '+innerWidth+'x'+innerHeight,'Pixel ratio: '+devicePixelRatio,'Online: '+navigator.onLine,'FPS: '+gbsDebug.fps,'Errors: '+gbsDebug.errors.length,'Warnings: '+gbsDebug.warnings.length,'',...gbsDebug.errors.map(x=>'ERROR ['+x.time+'] '+x.message),...gbsDebug.warnings.map(x=>'WARNING ['+x.time+'] '+x.message)].join('\\n');
+ try{await navigator.clipboard.writeText(report);document.getElementById('copyDebug').textContent='COPIED!';}
+ catch(e){const ta=document.createElement('textarea');ta.value=report;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');document.getElementById('copyDebug').textContent='COPIED!';}catch(_){document.getElementById('debugLog').textContent=report;}ta.remove();}
+};
+
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const root=document.querySelector('#view'),scene=new THREE.Scene();scene.background=new THREE.Color(0x87b9d2);scene.fog=new THREE.Fog(0x87b9d2,90,380);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;root.appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xd9efff,0x5b503c,2.0);scene.add(hemi);const sun=new THREE.DirectionalLight(0xfff0d2,2.2);sun.position.set(-35,70,25);sun.castShadow=true;scene.add(sun);
+const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+const asphalt=mat(0x42494b),sand=mat(0xc8b17b),grass=mat(0x557c43),yellow=mat(0xe6bd20),dark=mat(0x18242b),glass= new THREE.MeshStandardMaterial({color:0x294c5b,metalness:.15,roughness:.22});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
+const road=new THREE.Mesh(new THREE.PlaneGeometry(15,700),asphalt);road.rotation.x=-Math.PI/2;road.position.set(0,0,-300);road.receiveShadow=true;scene.add(road);
+for(let x of [-7.15,7.15]){let line=new THREE.Mesh(new THREE.BoxGeometry(.16,.025,700),mat(0xf2e6bc));line.position.set(x,.02,-300);scene.add(line)}
+for(let z=12;z>-650;z-=18){let dash=new THREE.Mesh(new THREE.BoxGeometry(.18,.03,7),mat(0xf4e7bd));dash.position.set(0,.03,z);scene.add(dash)}
+// Ghanaian roadside blocks, kiosks and palms as lightweight repeated geometry
+function building(x,z,w,h,d,color){let b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));b.position.set(x,h/2,z);b.castShadow=true;b.receiveShadow=true;scene.add(b);let roof=new THREE.Mesh(new THREE.BoxGeometry(w*1.04,.25,d*1.04),mat(0x754c35));roof.position.set(x,h+.12,z);scene.add(roof);for(let yy=1.2;yy<h-.4;yy+=1.5)for(let xx=-w/2+.7;xx<w/2-.3;xx+=1.5){let win=new THREE.Mesh(new THREE.BoxGeometry(.65,.65,.04),glass);win.position.set(x+xx,yy,z+d/2+.025);scene.add(win)}}
+for(let z=5;z>-260;z-=22){building(-13-(Math.random()*5),z,7,5+Math.random()*9,8,[0xd3a36c,0xc7b8a1,0xb77c54,0xd4c6a0][Math.floor(Math.random()*4)]);building(13+Math.random()*5,z,7,4+Math.random()*8,8,[0xd0b18a,0xb7a18a,0xc88e62][Math.floor(Math.random()*3)])}
+
+// V31 expanded Ghana countryside: forest belt, layered hills, stream and bridge.
+const forestTrees=[];
+function forestTree(x,z,scale=1){
+ const root=new THREE.Group();root.position.set(x,0,z);root.scale.setScalar(scale);
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16,.27,3.8,7),mat(0x65452d));trunk.position.y=1.9;root.add(trunk);
+ const crown=new THREE.Group();crown.position.y=3.25;root.add(crown);
+ const greens=[0x285d36,0x347343,0x477e3d,0x1f5032];
+ for(let k=0;k<5;k++){
+  const leaf=new THREE.Mesh(new THREE.SphereGeometry(1,8,7),mat(greens[k%greens.length]));
+  leaf.scale.set(.85+Math.random()*.35,.8+Math.random()*.35,.8+Math.random()*.35);
+  leaf.position.set((Math.random()-.5)*1.1,Math.random()*.75,(Math.random()-.5)*1.1);crown.add(leaf);
+ }
+ root.userData={crown,phase:Math.random()*6.28,flex:.6+Math.random()*.8};
+ scene.add(root);forestTrees.push(root);
+}
+for(let z=-275;z>-660;z-=12){
+ for(const side of [-1,1]){
+  forestTree(side*(12+Math.random()*13),z+(Math.random()-.5)*7,.8+Math.random()*.65);
+  if(Math.random()>.25)forestTree(side*(19+Math.random()*18),z+5,.65+Math.random()*.6);
+ }
+}
+for(let i=0;i<7;i++){
+ const hill=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),mat([0x55734a,0x6c8050,0x4a6845][i%3]));
+ hill.scale.set(22+Math.random()*12,7+Math.random()*8,35+Math.random()*18);
+ hill.position.set((i%2?1:-1)*(30+Math.random()*18),-1,-330-i*48);scene.add(hill);
+}
+const stream=new THREE.Mesh(new THREE.PlaneGeometry(12,300),new THREE.MeshStandardMaterial({color:0x397f9d,roughness:.25,metalness:.12}));
+stream.rotation.x=-Math.PI/2;stream.position.set(24,-.045,-445);scene.add(stream);
+const bridgeDeck=new THREE.Mesh(new THREE.BoxGeometry(18,.45,15),mat(0x777b78));bridgeDeck.position.set(24,.35,-445);scene.add(bridgeDeck);
+for(const side of [-1,1])for(let z=-452;z<=-438;z+=3){
+ const rail=new THREE.Mesh(new THREE.BoxGeometry(.18,.7,.18),mat(0x555b5c));rail.position.set(15+18*(side>0?1:0),.9,z);scene.add(rail);
+}
+
+// V32: connected countryside village and farming belt beyond the forest.
+function villageHouse(x,z,wall,roof){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(5,2.7,4),mat(wall));body.position.y=1.35;g.add(body);
+ const top=new THREE.Mesh(new THREE.ConeGeometry(3.7,1.8,4),mat(roof));top.position.set(0,3.45,0);top.rotation.y=Math.PI/4;g.add(top);
+ const door=new THREE.Mesh(new THREE.BoxGeometry(.85,1.8,.12),mat(0x49301f));door.position.set(0,.9,2.06);g.add(door);
+ const win=new THREE.Mesh(new THREE.BoxGeometry(.8,.7,.12),mat(0x7aa0a6));win.position.set(-1.5,1.65,2.08);g.add(win);
+ scene.add(g);
+}
+for(let i=0;i<7;i++){
+ const z=-485-i*22;
+ villageHouse(-18-(i%2)*5,z,[0xc6a36f,0xb88f5c,0xd2bd91][i%3],[0x75442d,0x8a4d2f][i%2]);
+ if(i%2===0)villageHouse(20+(i%3)*3,z-8,0xc9b58c,0x6e4630);
+}
+// Small farm plots, crop rows and plantain trees.
+for(let i=0;i<5;i++){
+ const z=-500-i*27;
+ for(const side of [-1,1]){
+  const field=new THREE.Mesh(new THREE.PlaneGeometry(12,18),mat(i%2?0x667b3b:0x8a8742));
+  field.rotation.x=-Math.PI/2;field.position.set(side*25,.015,z);scene.add(field);
+  for(let r=0;r<4;r++)for(let c=0;c<5;c++){
+   const crop=new THREE.Mesh(new THREE.ConeGeometry(.22,.9,5),mat(0x3f7135));
+   crop.position.set(side*25-4.5+c*2.2,.48,z-7+r*4);scene.add(crop);
+  }
+ }
+}
+for(let i=0;i<12;i++){
+ const x=(i%2?1:-1)*(17+Math.random()*13),z=-495-Math.random()*140;
+ palm(x,z);
+}
+// Route sign at the transition from forest to village.
+roadsideSign(-9,-485,'RURAL VILLAGE','SLOW • PEOPLE & ANIMALS',0x1b603d);
+// Goats and chickens: simple animated roadside wildlife, kept clear of the bus lane.
+const wildlife=[];
+function makeGoat(x,z,dir){
+ const g=new THREE.Group();g.position.set(x,.12,z);
+ const coat=mat(0xbca27b),dark=mat(0x40372d);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(1.05,.55,.42),coat);body.position.y=.72;g.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.25,8,7),coat);head.position.set(dir*.62,.95,0);g.add(head);
+ for(const lx of [-.32,.32])for(const zz of [-.14,.14]){
+  const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,.55,6),dark);leg.position.set(lx,.28,zz);g.add(leg);
+ }
+ for(const s of [-1,1]){const horn=new THREE.Mesh(new THREE.ConeGeometry(.055,.35,5),dark);horn.position.set(dir*.65,1.25,s*.12);horn.rotation.z=-.25;g.add(horn);}
+ scene.add(g);wildlife.push({g,baseX:x,baseZ:z,phase:Math.random()*6.28,speed:.45+Math.random()*.3});
+}
+makeGoat(-10,-540,1);makeGoat(10,-585,-1);
+const birds=[];
+for(let i=0;i<9;i++){
+ const bird=new THREE.Mesh(new THREE.ConeGeometry(.12,.55,4),mat(0x252b2b));
+ bird.position.set(-8+i*2.2,10+Math.random()*5,-520-Math.random()*100);
+ bird.rotation.z=Math.PI/2;scene.add(bird);birds.push({mesh:bird,phase:Math.random()*6.28});
+}
+
+function palm(x,z){let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,5,7),mat(0x795535));trunk.position.set(x,2.5,z);scene.add(trunk);for(let i=0;i<7;i++){let leaf=new THREE.Mesh(new THREE.ConeGeometry(.45,4,5),mat(0x286b3b));leaf.position.set(x+Math.cos(i*Math.PI/3.5)*1.2,5.1,z+Math.sin(i*Math.PI/3.5)*1.2);leaf.rotation.z=Math.PI/2;leaf.rotation.y=i*Math.PI/3.5;scene.add(leaf)}}
+for(let z=0;z>-250;z-=35){palm(-9,z);palm(9,z)}
+
+// V16 Accra streetscape: Ghana-style shopfronts, market stalls, bus stops and road signs.
+function labelTexture(title,sub,color='#f4c542'){
+ const c=document.createElement('canvas');c.width=512;c.height=160;const ctx=c.getContext('2d');
+ ctx.fillStyle='#17252b';ctx.fillRect(0,0,512,160);ctx.fillStyle=color;ctx.fillRect(0,0,512,15);
+ ctx.fillStyle='#ffffff';ctx.font='bold 42px Arial';ctx.fillText(title,22,78);
+ ctx.fillStyle='#f4d98b';ctx.font='26px Arial';ctx.fillText(sub,22,124);
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+}
+function roadsideSign(x,z,title,sub,color='#f4c542'){
+ const post=new THREE.Mesh(new THREE.BoxGeometry(.13,2.5,.13),mat(0x777b7d));post.position.set(x,1.25,z);scene.add(post);
+ const board=new THREE.Mesh(new THREE.BoxGeometry(3.5,1.1,.12),new THREE.MeshBasicMaterial({map:labelTexture(title,sub,color)}));
+ board.position.set(x,2.5,z+.08);scene.add(board);
+}
+function marketStall(x,z,canopyColor){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const counter=new THREE.Mesh(new THREE.BoxGeometry(3.3,1.05,1.5),mat(0x8b5734));counter.position.y=.55;g.add(counter);
+ const top=new THREE.Mesh(new THREE.BoxGeometry(3.8,.16,2),mat(canopyColor));top.position.set(0,2.35,0);g.add(top);
+ for(const dx of [-1.65,1.65])for(const dz of [-.8,.8]){
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.35,6),mat(0x55504a));pole.position.set(dx,1.18,dz);g.add(pole);
+ }
+ for(let i=0;i<8;i++){
+  const fruit=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),mat([0xd83c27,0xe5b52c,0x4b9b42][i%3]));
+  fruit.position.set(-1.2+(i%4)*.75,1.25,.1+(i%2)*.35);g.add(fruit);
+ }
+ scene.add(g);
+}
+function busStop(x,z,name){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(4.8,.18,2.2),mat(0x1d5570));roof.position.y=2.65;g.add(roof);
+ for(const dx of [-2.1,2.1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,2.6,.14),mat(0x777777));p.position.set(dx,1.3,0);g.add(p)}
+ const bench=new THREE.Mesh(new THREE.BoxGeometry(2.8,.18,.55),mat(0x875b37));bench.position.set(0,.75,.3);g.add(bench);
+ scene.add(g);roadsideSign(x,z-1,name,'BUS STOP','#53c8db');
+}
+roadsideSign(-9,-22,'ACCRA CENTRAL','CITY CENTRE');
+roadsideSign(9,-86,'KANESHIE','MARKET & STATION');
+roadsideSign(-9,-156,'LAPAZ','ACCRA');
+roadsideSign(9,-226,'MADINA','JUNCTION');
+marketStall(-10,-48,0xd83a2e);marketStall(10,-120,0x187b55);marketStall(-10,-190,0xe4b52e);
+busStop(10,-102,'KANESHIE');busStop(-10,-172,'LAPAZ');
+
+// Ambient Accra traffic: taxis, private cars and minibuses in both directions
+const trafficCars=[];
+function makeTrafficCar(x,z,color,kind='CAR',direction=-1){
+ const g=new THREE.Group();g.position.set(x,.05,z);g.userData.direction=direction;g.userData.laneX=x;g.userData.baseSpeed=kind==='TROTRO'?17:kind==='TAXI'?20:24;
+ const bodyMat=mat(color),windowMat=new THREE.MeshStandardMaterial({color:0x243e4b,roughness:.25});
+ box(g,1.8,.72,3.5,bodyMat,0,.72,0);box(g,1.55,.55,1.65,windowMat,0,1.28,-.05);
+ for(let zz of [-1.15,1.15])for(let xx of [-.94,.94]){let w=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.16,12),dark);w.rotation.z=Math.PI/2;w.position.set(xx,.35,zz);g.add(w)}
+ if(kind==='TROTRO'){box(g,1.65,.55,2.3,bodyMat,0,1.35,-.25);box(g,1.45,.48,.04,windowMat,0,1.55,-1.43)}
+ if(kind==='TAXI'){box(g,.8,.15,1.1,mat(0xf0d448),0,1.35,0)}
+ scene.add(g);trafficCars.push(g);return g;
+}
+makeTrafficCar(-2.4,-28,0xd7d7d0,'CAR',-1);
+makeTrafficCar(-2.4,-88,0x2e8b57,'TAXI',-1);
+makeTrafficCar(-2.4,-148,0xe0b51d,'TROTRO',-1);
+makeTrafficCar(2.4,-62,0x6c91bd,'CAR',1);
+makeTrafficCar(2.4,-125,0xb8b8b8,'CAR',1);
+makeTrafficCar(2.4,-205,0xd6d6d6,'TAXI',1);
+// Traffic signal at a simple junction near the route
+const signal=new THREE.Group();signal.position.set(8,0,-92);scene.add(signal);
+box(signal,.18,5,.18,dark,0,2.5,0);box(signal,.8,1.9,.45,mat(0x202326),0,4.8,0);
+const lampMats=[mat(0x551515),mat(0x5a4812),mat(0x14552a)];
+const lamps=lampMats.map((m,i)=>{let l=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),m);l.position.set(0,5.35-i*.55,.25);signal.add(l);return l});
+let signalPhase=0,signalTimer=0;
+function setSignalPhase(){lampMats.forEach((m,i)=>m.emissive.setHex(i===signalPhase?[0xff1100,0xffb400,0x00ff44][i]:0x000000));}
+setSignalPhase();
+
+// Junction markings and pedestrian crossing at the test signal.
+for(let i=0;i<7;i++){
+ const stripe=new THREE.Mesh(new THREE.BoxGeometry(7,.035,.42),new THREE.MeshStandardMaterial({color:0xe8e8df,roughness:1}));
+ stripe.position.set(0,.045,-89+i*.8);scene.add(stripe);
+}
+
+
+
+// V8 roadside road-safety zone and police checkpoint props
+function roadsideSign(x,z,label,colour=0x174c36){
+ const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+ box(group,.12,2.2,.12,dark,0,1.1,0);
+ box(group,2.1,1.05,.12,mat(colour),0,2.25,0);
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.font='bold 54px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+ const lines=label.split('|');lines.forEach((t,i)=>ctx.fillText(t,256,90+i*72));
+ const tex=new THREE.CanvasTexture(canvas);const face=new THREE.Mesh(new THREE.PlaneGeometry(1.95,.9),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
+ face.position.set(0,2.25,.071);group.add(face);return group;
+}
+roadsideSign(-8,-48,'SPEED LIMIT|50 km/h',0x174c36);
+roadsideSign(8,-198,'POLICE|CHECKPOINT',0x173d70);
+// Simple police checkpoint: parked patrol pickup, cones and a barrier across the shoulder
+const policeCar=new THREE.Group();policeCar.position.set(5.6,.05,-218);scene.add(policeCar);
+box(policeCar,2,.8,4,mat(0xe8e9e8),0,.75,0);
+box(policeCar,1.7,.55,1.8,glass,0,1.4,-.1);
+box(policeCar,.8,.16,.65,mat(0x173d70),0,1.78,0);
+for(const zc of [-1.35,1.35])for(const xc of [-1.05,1.05]){
+ const wh=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.18,12),dark);wh.rotation.z=Math.PI/2;wh.position.set(xc,.35,zc);policeCar.add(wh);
+}
+for(let i=0;i<4;i++){
+ const cone=new THREE.Mesh(new THREE.ConeGeometry(.28,.75,8),mat(0xf07822));
+ cone.position.set(2.4,.38,-220-i*2.1);scene.add(cone);
+}
+const checkpointBarrier=new THREE.Group();checkpointBarrier.position.set(1.4,.1,-213);scene.add(checkpointBarrier);
+box(checkpointBarrier,.18,.18,5,mat(0xf0e7d2),0,1.05,0);
+for(let i=0;i<5;i++)box(checkpointBarrier,.2,.2,.75,mat(0xd72c24),0,1.05,-1.8+i*.9);
+let checkpointMessageUntil=0,checkpointPassed=false,inspectionDone=false,policeFineTotal=0,overspeedFineIssued=false;
+
+
+// V9 road-condition props: shallow potholes, speed humps and a roadside work zone.
+const roadHazards=[];
+function makePothole(x,z,r=.72){
+ const mesh=new THREE.Mesh(new THREE.CircleGeometry(r,18),new THREE.MeshStandardMaterial({color:0x252522,roughness:1}));
+ mesh.rotation.x=-Math.PI/2;mesh.position.set(x,.035,z);scene.add(mesh);
+ const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.92,.07,6,18),new THREE.MeshStandardMaterial({color:0x69645b,roughness:1}));
+ rim.rotation.x=Math.PI/2;rim.position.set(x,.045,z);scene.add(rim);
+ roadHazards.push({z,x,type:'pothole',radius:r,hit:false});
+}
+makePothole(-1.4,-32,.7);makePothole(1.25,-72,.85);makePothole(-.4,-119,.65);makePothole(1.5,-183,.8);
+function makeHump(z){
+ const hump=new THREE.Mesh(new THREE.BoxGeometry(9,.18,1.15),new THREE.MeshStandardMaterial({color:0xd7a52d,roughness:.9}));
+ hump.position.set(0,.11,z);scene.add(hump);
+ for(let x=-3.5;x<=3.5;x+=1.4){
+  const stripe=new THREE.Mesh(new THREE.BoxGeometry(.65,.025,.95),new THREE.MeshStandardMaterial({color:0x252525}));
+  stripe.position.set(x,.215,z);scene.add(stripe);
+ }
+ roadHazards.push({z,x:0,type:'hump',radius:5,hit:false});
+}
+makeHump(-151);
+function makeWorkZone(){
+ for(let i=0;i<5;i++){
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(.32,.9,8),mat(0xf07822));
+  cone.position.set(3.8,.45,-165-i*3.2);scene.add(cone);
+ }
+ const board=new THREE.Group();board.position.set(7,0,-162);scene.add(board);
+ box(board,2.5,1.25,.16,mat(0xe6a62a),0,2.5,0);
+ const cv=document.createElement('canvas');cv.width=512;cv.height=256;const cx=cv.getContext('2d');
+ cx.fillStyle='#171717';cx.font='bold 58px Arial';cx.textAlign='center';cx.fillText('ROAD WORK',256,105);cx.fillText('AHEAD',256,180);
+ const tx=new THREE.CanvasTexture(cv);
+ const face=new THREE.Mesh(new THREE.PlaneGeometry(2.35,1.1),new THREE.MeshBasicMaterial({map:tx}));
+ face.position.set(0,2.5,.1);board.add(face);
+}
+makeWorkZone();
+let hazardMessageUntil=0,lastHazardTime=0;
+
+// Passenger stops and simple low-poly Ghanaian pedestrians
+const stops=[];
+function makePerson(x,z,shirtColor){
+ const g=new THREE.Group();
+ const skinColors=[0x4b2c20,0x68402d,0x80513a,0x9b684d,0xb27b5c];
+ const skin=mat(skinColors[Math.floor(Math.random()*skinColors.length)]), shirt=mat(shirtColor), trousers=mat([0x202b35,0x34383b,0x554638,0x253b32][Math.floor(Math.random()*4)]), shoes=mat(0x17191b);
+ const hair=mat([0x171313,0x241b18,0x33251f][Math.floor(Math.random()*3)]);
+ const white=mat(0xf1e9df), black=mat(0x171313);
+ function part(geo,material,x,y,z,rx=0,ry=0,rz=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
+ // Natural body proportions: pelvis, tapered torso, neck and head
+ part(new THREE.CapsuleGeometry(.22,.34,4,8),trousers,0,.82,0);
+ part(new THREE.CapsuleGeometry(.29,.48,5,10),shirt,0,1.28,0);
+ part(new THREE.CylinderGeometry(.105,.12,.16,10),skin,0,1.68,0);
+ part(new THREE.SphereGeometry(.235,16,12),skin,0,1.94,0);
+ // Hair cap and hairline
+ part(new THREE.SphereGeometry(.239,16,10,0,Math.PI*2,0,Math.PI*.55),hair,0,2.015,-.018);
+ // Ears, nose, eyes, brows and subtle mouth
+ for(const side of [-1,1]){
+  part(new THREE.SphereGeometry(.047,8,8),skin,side*.235,1.94,0);
+  part(new THREE.SphereGeometry(.025,8,6),white,side*.085,1.975,.202);
+  part(new THREE.SphereGeometry(.012,8,6),black,side*.085,1.975,.224);
+  part(new THREE.BoxGeometry(.075,.018,.025),hair,side*.085,2.025,.198);
+ }
+ part(new THREE.SphereGeometry(.035,8,8),skin,0,1.91,.225);
+ part(new THREE.BoxGeometry(.075,.012,.018),mat(0x4c2420),0,1.855,.214);
+ // Arms with shoulder sleeves, forearms and hands
+ for(const side of [-1,1]){
+  part(new THREE.SphereGeometry(.14,10,8),shirt,side*.29,1.48,0);
+  part(new THREE.CapsuleGeometry(.085,.34,4,8),shirt,side*.39,1.23,.015,0,0,side*-.10);
+  part(new THREE.CapsuleGeometry(.065,.28,4,8),skin,side*.43,.94,.045,0,0,side*-.08);
+  part(new THREE.SphereGeometry(.075,8,8),skin,side*.45,.77,.06);
+ }
+ // Legs, knees and shoes
+ for(const side of [-1,1]){
+  part(new THREE.CapsuleGeometry(.105,.39,4,8),trousers,side*.125,.48,0);
+  part(new THREE.SphereGeometry(.105,8,8),trousers,side*.125,.25,0);
+  part(new THREE.CapsuleGeometry(.075,.34,4,8),trousers,side*.125,.16,.015);
+  part(new THREE.BoxGeometry(.16,.12,.3),shoes,side*.125,.075,.09);
+ }
+ // Clothing detail: collar and shirt buttons
+ part(new THREE.ConeGeometry(.09,.12,4),mat(0xe4ded0),0,1.56,.24,Math.PI,0,0);
+ for(let y of [1.42,1.29,1.16])part(new THREE.SphereGeometry(.018,6,6),mat(0xe5d7ad),0,y,.278);
+ // A small shoulder bag on some pedestrians
+ if(Math.random()>.55){part(new THREE.BoxGeometry(.2,.25,.1),mat(0x59412c),-.31,1.08,-.13);part(new THREE.CylinderGeometry(.012,.012,.42,6),mat(0x30271f),-.28,1.32,-.08,0,0,.25)}
+ g.position.set(x,0,z);scene.add(g);return g;
+}
+
+// V11 pedestrian crossing and roadside vendor activity.
+const crossingWalkers=[];
+function addCrossingWalker(startX,z,endX,shirt){
+ const person=makePerson(startX,z,shirt);
+ person.rotation.y=endX>startX?Math.PI/2:-Math.PI/2;
+ crossingWalkers.push({mesh:person,startX,endX,z,progress:Math.random()*.35,speed:.055+Math.random()*.025,active:true});
+}
+addCrossingWalker(-6.5,-91,6.5,0x287a55);
+addCrossingWalker(6.5,-94,-6.5,0xb84b36);
+addCrossingWalker(-6.5,-97,6.5,0x345f9c);
+// A small roadside kiosk and vendor with a colourful umbrella.
+const vendorStall=new THREE.Group();vendorStall.position.set(-10,0,-132);scene.add(vendorStall);
+box(vendorStall,2.1,.12,1.35,mat(0x704a2b),0,1.05,0);
+for(const x of [-.9,.9])box(vendorStall,.09,2,.09,dark,x,1,0);
+const canopy=new THREE.Mesh(new THREE.ConeGeometry(1.55,.5,8),mat(0xc64a32));canopy.position.set(0,2.35,0);canopy.rotation.y=Math.PI/8;vendorStall.add(canopy);
+const vendor=makePerson(-10.8, -131,0x2e8056);
+const goods=[0xe0a52c,0x3c8f65,0xc84d36,0x4a79aa];
+goods.forEach((c,i)=>{const item=new THREE.Mesh(new THREE.BoxGeometry(.28,.22,.25),mat(c));item.position.set(-10.4+i*.3,1.2,-132);scene.add(item);});
+let pedestrianWarningUntil=0;
+
+function makeStop(z,label){
+ const shelter=new THREE.Group();shelter.position.set(10,0,z);scene.add(shelter);
+ box(shelter,4,.18,2.2,mat(0x777a76),0,.12,0);
+ for(let x of [-1.7,1.7])box(shelter,.12,2.5,.12,dark,x,1.35,-.75);
+ box(shelter,4,.15,.2,mat(0x9c5939),0,2.6,-.75);
+ box(shelter,3.5,.8,.08,mat(0xf2d34d),0,2.0,-.9);
+ const sign=box(shelter,.12,2.2,.12,dark,2.3,1.1,.8);
+ const people=[];for(let i=0;i<3+(stops.length%3);i++)people.push(makePerson(7.2+(i%2)*.75,z+1.2+Math.floor(i/2)*.65,[0x258b68,0xb84a3b,0x3366a0,0xc18a32][i%4]));
+ stops.push({z,label,people,served:false});
+}
+makeStop(-38,'Circle Market Stop');makeStop(-105,'Kaneshie Stop');makeStop(-175,'Lapaz Stop');makeStop(-245,'Madina Junction');
+
+// V12 passenger interaction state: queue members step toward the bus door when boarding.
+const boardingAnimations=[];
+const alightingAnimations=[];
+
+// Bus body
+const bus=new THREE.Group();scene.add(bus);
+function box(parent,w,h,d,material,x,y,z){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+box(bus,3.1,2.65,6.4,yellow,0,1.65,0);box(bus,2.85,1.05,5.8,glass,0,2.65,-.1);box(bus,2.9,.38,1.0,dark,0,3.0,2.85);box(bus,2.9,.3,.9,dark,0,.55,-2.8);
+for(let z of [-2,-.65,.7,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,.28,18),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;bus.add(tire)}
+for(let z of [-2.7,2.7])for(let x of [-.95,.95])box(bus,.45,.22,.08,mat(0xffe4a0),x,1.35,z);
+box(bus,1.4,.35,.08,mat(0xffffff),0,1.1,3.23);
+const interior=new THREE.Group();bus.add(interior);
+const cabinStyle=new THREE.Group();interior.add(cabinStyle);
+// Driver cockpit: dashboard, instrument cluster, steering wheel, mirrors and passenger seating.
+box(interior,2.75,.42,.85,mat(0x202b31),0,1.55,1.95);
+box(interior,1.12,.34,.12,mat(0x0b151a),0,1.88,1.55); // instrument binnacle
+box(interior,.86,.22,.035,mat(0x3e9ca3),0,1.9,1.47); // digital display
+// Steering column and wheel
+let column=new THREE.Mesh(new THREE.CylinderGeometry(.09,.13,.68,12),dark);column.position.set(-.72,1.62,1.28);column.rotation.x=Math.PI/2;interior.add(column);
+let steeringWheel=new THREE.Mesh(new THREE.TorusGeometry(.42,.065,10,32),mat(0x15191b));steeringWheel.position.set(-.72,1.94,1.0);steeringWheel.rotation.x=Math.PI/2;interior.add(steeringWheel);
+box(interior,.18,.08,.08,mat(0x68747a),-.72,1.94,.98);
+// Driver and passenger seats
+function seat(x,z){box(interior,.72,.18,.72,mat(0x303a40),x,.85,z);let back=box(interior,.72,.95,.18,mat(0x3d484d),x,1.38,z+.28);back.rotation.x=-.08}
+seat(-.72,.15);for(let z of [-1.65,-.45]){seat(-.72,z);seat(.72,z)}
+// Rear-view mirror and side mirrors
+box(interior,.55,.08,.08,mat(0x111719),0,2.85,-1.95);box(interior,.48,.18,.05,glass,0,2.82,-1.98);
+box(interior,.08,.5,.08,dark,-1.62,2.45,-.9);box(interior,.08,.5,.08,dark,1.62,2.45,-.9);
+box(interior,.16,.3,.12,glass,-1.68,2.55,-.92);box(interior,.16,.3,.12,glass,1.68,2.55,-.92);
+
+
+
+// V14 functional exterior lighting and cockpit wiper components.
+const headlampMat=new THREE.MeshStandardMaterial({color:0xfff2c2,emissive:0x000000});
+const tailLampMat=new THREE.MeshStandardMaterial({color:0x8f1717,emissive:0x000000});
+const indicatorMat=new THREE.MeshStandardMaterial({color:0x8c4a08,emissive:0x000000});
+const headlamps=[],taillamps=[],indicators=[];
+for(const x of [-1.05,1.05]){
+ const h=new THREE.Mesh(new THREE.BoxGeometry(.48,.22,.08),headlampMat);h.position.set(x,1.55,3.25);bus.add(h);headlamps.push(h);
+ const t=new THREE.Mesh(new THREE.BoxGeometry(.25,.25,.08),tailLampMat);t.position.set(x,1.5,-3.25);bus.add(t);taillamps.push(t);
+ const a=new THREE.Mesh(new THREE.BoxGeometry(.16,.14,.08),indicatorMat);a.position.set(x*1.28,1.55,3.25);bus.add(a);indicators.push(a);
+}
+
+// V21 selectable Ghanaian fleet liveries. These are prototype skins on a shared base chassis.
+let selectedBusModel='TROTRO';
+let vehicleTune={accel:1.18,max:82,handling:1.12,brake:1.05};
+let fleetSkin=new THREE.Group();bus.add(fleetSkin);
+const fleetStyles={
+ 'TROTRO':{cost:0,colour:0xe9b82c,accent:0x18232a,mark:'TROTRO',accel:1.18,max:82,handling:1.12,brake:1.05,seat:0x4c4134,dash:0x252b30},
+ 'VIP':{cost:800,colour:0x183b75,accent:0xe8e8ed,mark:'VIP EXPRESS',accel:.88,max:105,handling:.82,brake:1.12,seat:0x293b52,dash:0x18232f},
+ 'STC':{cost:1200,colour:0xd6dce2,accent:0x173f79,mark:'STC',accel:.82,max:98,handling:.78,brake:1.18,seat:0x31455a,dash:0x1a252d},
+ '2M EXPRESS':{cost:1000,colour:0x176b49,accent:0xf1d34a,mark:'2M EXPRESS',accel:.96,max:102,handling:.88,brake:1.1,seat:0x3d332b,dash:0x202b2a}
+};
+function applyFleetSkin(name){
+ while(fleetSkin.children.length){const child=fleetSkin.children.pop();fleetSkin.remove(child);}
+ const style=fleetStyles[name];if(!style)return;
+ const bodyMat=mat(style.colour),accentMat=mat(style.accent);
+ // Lower side panels, front/rear fascia and roof band distinguish each fleet livery.
+ for(const side of [-1,1]){
+  box(fleetSkin,2.82,1.05,.07,bodyMat,0,1.45,side*3.235);
+  box(fleetSkin,2.86,.17,.075,accentMat,0,2.08,side*3.28);
+  box(fleetSkin,.09,.35,.08,accentMat,side*1.36,1.38,side*3.29);
+ }
+ box(fleetSkin,2.88,.7,.07,bodyMat,0,1.45,3.245);
+ box(fleetSkin,2.88,.7,.07,bodyMat,0,1.45,-3.245);
+ box(fleetSkin,2.9,.12,5.9,accentMat,0,3.03,0);
+ const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.font='bold 100px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(style.mark,512,128);
+ const tex=new THREE.CanvasTexture(canvas);
+ for(const side of [-1,1]){
+  const decal=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.42),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));
+  decal.position.set(0,1.65,side*3.285);decal.rotation.y=side===1?0:Math.PI;fleetSkin.add(decal);
+ }
+
+ // Vehicle-specific cabin trim and seat upholstery overlays.
+ while(cabinStyle.children.length){const child=cabinStyle.children.pop();cabinStyle.remove(child);}
+ const seatMat=mat(style.seat),dashMat=mat(style.dash);
+ box(cabinStyle,2.7,.12,.72,dashMat,0,1.78,1.92);
+ for(const x of [-.72,.72])for(const z of [-1.65,-.45,.15]){
+  box(cabinStyle,.66,.09,.64,seatMat,x,.96,z);
+  box(cabinStyle,.66,.62,.12,seatMat,x,1.42,z+.28);
+ }
+ const trim=box(cabinStyle,2.72,.09,5.65,accentMat,0,2.96,0);
+
+ // Fleet-specific passenger cabin fittings and driver-area details.
+ const metal=mat(0x87949a),soft=mat(0x29343a),cream=mat(0xd9c9a5);
+ function cabinSign(text,colour){
+  const c=document.createElement('canvas');c.width=512;c.height=128;
+  const g=c.getContext('2d');g.fillStyle=colour;g.fillRect(0,0,512,128);
+  g.fillStyle='#fff';g.font='bold 48px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(text,256,64);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.38),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide}));
+  m.position.set(0,2.55,-2.65);cabinStyle.add(m);
+ }
+ if(name==='TROTRO'){
+  // Compact commercial minibus: mate fare box, grab rails and simple route board.
+  box(cabinStyle,.38,.5,.38,mat(0x8c6335),1.12,1.15,.85);
+  box(cabinStyle,.42,.07,.42,mat(0xd8b36a),1.12,1.43,.85);
+  for(const x of [-1.15,1.15]){
+   const rail=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,1.15,8),metal);
+   rail.position.set(x,2.25,-.85);cabinStyle.add(rail);
+  }
+  cabinSign('ACCRA • KANESHIE', '#8a4d13');
+ }else if(name==='VIP'){
+  // Coach-style luggage shelves, curtains and headrest cushions.
+  for(const x of [-1.32,1.32]){
+   box(cabinStyle,.22,.16,4.8,soft,x,2.48,-.15);
+   for(let z=-1.9;z<2.1;z+=.75){
+    const curtain=box(cabinStyle,.035,.75,.12,mat(0x263d68),x*.98,2.15,z);
+    curtain.rotation.z=.06;
+   }
+  }
+  for(const z of [-1.65,-.45,.15]){
+   for(const x of [-.72,.72])box(cabinStyle,.5,.2,.12,cream,x,1.85,z+.34);
+  }
+  cabinSign('VIP EXPRESS • COMFORT', '#173b70');
+ }else if(name==='STC'){
+  // Intercity coach: route board, overhead parcel racks and blue seat headrests.
+  box(cabinStyle,2.35,.13,4.9,soft,0,2.48,-.1);
+  for(const z of [-1.65,-.45,.15]){
+   for(const x of [-.72,.72]){
+    box(cabinStyle,.48,.24,.1,mat(0x244e82),x,1.92,z+.35);
+    box(cabinStyle,.08,.07,.08,mat(0xe5e8ed),x,2.02,z+.35);
+   }
+  }
+  cabinSign('STC • INTERCITY', '#173f79');
+ }else if(name==='2M EXPRESS'){
+  // Express coach: overhead parcel rails, warm seat trim and individual reading lights.
+  for(const x of [-1.3,1.3]){
+   box(cabinStyle,.2,.14,4.9,mat(0x343d3a),x,2.5,-.1);
+   for(let z=-1.8;z<2;z+=.85){
+    const lamp=new THREE.Mesh(new THREE.SphereGeometry(.055,8,8),mat(0xffe1a0));
+    lamp.position.set(x*.82,2.35,z);cabinStyle.add(lamp);
+   }
+  }
+  for(const z of [-1.65,-.45,.15]){
+   for(const x of [-.72,.72])box(cabinStyle,.5,.16,.12,mat(0x6b4a2c),x,1.86,z+.35);
+  }
+  cabinSign('2M EXPRESS • GHANA', '#176b49');
+ }
+
+
+ selectedBusModel=name;vehicleTune={accel:style.accel,max:style.max,handling:style.handling,brake:style.brake};
+ document.getElementById('fleet').textContent='BUS MODEL: '+name;
+}
+applyFleetSkin('TROTRO');
+document.getElementById('fleet').onclick=()=>document.getElementById('fleetPanel').style.display='block';
+document.getElementById('closeFleet').onclick=()=>document.getElementById('fleetPanel').style.display='none';
+document.querySelectorAll('.fleetChoice').forEach(btn=>btn.onclick=()=>{
+ const name=btn.dataset.model,style=fleetStyles[name],msg=document.getElementById('fleetMessage');
+ if(companyCash<style.cost){msg.textContent='Not enough company funds for this vehicle style.';return;}
+ if(name!==selectedBusModel){companyCash-=style.cost;refreshCompany();applyFleetSkin(name);}
+ msg.textContent=name+' selected. Prototype livery applied.';
+});
+
+const wiperPivot=new THREE.Group();wiperPivot.position.set(0,2.55,1.85);interior.add(wiperPivot);
+const wiperBlade=new THREE.Mesh(new THREE.BoxGeometry(1.65,.045,.045),mat(0x171b1d));wiperBlade.position.set(0,0,.02);wiperPivot.add(wiperBlade);
+let wipersOn=false,indicatorMode='OFF',hazardsOn=false,lightMode='OFF',wiperPhase=0;
+let warningFlash=0;
+
+// V13 cockpit detail pack: analogue-style gauges, switches, gear lever, pedals and seat belts.
+const gaugeFaceMat=new THREE.MeshStandardMaterial({color:0x11191c,roughness:.45});
+function cockpitGauge(x,y,z,r,label){
+ const face=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.07,24),gaugeFaceMat);
+ face.rotation.x=Math.PI/2;face.position.set(x,y,z);interior.add(face);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(r,.035,8,24),mat(0x9da7a5));
+ ring.position.set(x,y,z+.045);interior.add(ring);
+ const needle=new THREE.Mesh(new THREE.BoxGeometry(.025,r*.78,.025),mat(0xe34b32));
+ needle.position.set(x,y,z+.09);needle.rotation.z=-.45;interior.add(needle);
+ const cv=document.createElement('canvas');cv.width=256;cv.height=128;
+ const c=cv.getContext('2d');c.fillStyle='#dfe8e5';c.font='bold 30px Arial';c.textAlign='center';c.fillText(label,128,38);
+ c.font='20px Arial';c.fillText('0   40   80',128,105);
+ const tex=new THREE.CanvasTexture(cv);
+ const tag=new THREE.Mesh(new THREE.PlaneGeometry(r*1.7,.28),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
+ tag.position.set(x,y-r-.18,z+.09);interior.add(tag);
+ return needle;
+}
+const speedNeedle=cockpitGauge(-.18,1.91,1.43,.19,'KM/H');
+const rpmNeedle=cockpitGauge(.28,1.91,1.43,.16,'RPM');
+// Control console and gear selector
+box(interior,.62,.22,.72,mat(0x303a3d),.68,1.25,.95);
+const gearStem=new THREE.Mesh(new THREE.CylinderGeometry(.035,.05,.42,10),mat(0x9ba3a3));
+gearStem.position.set(.65,1.55,.86);gearStem.rotation.x=-.22;interior.add(gearStem);
+const gearKnob=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),mat(0x171b1d));
+gearKnob.position.set(.65,1.77,.81);interior.add(gearKnob);
+// Pedal faces in the driver footwell
+for(let i=0;i<3;i++){
+ const pedal=new THREE.Mesh(new THREE.BoxGeometry(.22,.3,.08),mat(i===0?0x343b40:0x777e80));
+ pedal.position.set(-1.05+i*.28,.48,1.48);pedal.rotation.x=-.28;interior.add(pedal);
+ for(let j=0;j<3;j++)box(interior,.025,.035,.025,dark,-1.13+i*.28+j*.07,.48,1.42);
+}
+// Seat headrests, stitching and safety belts
+for(const x of [-.72,.72])for(const z of [-1.65,-.45,.15]){
+ box(interior,.48,.28,.16,mat(0x46545a),x,1.93,z+.31);
+ box(interior,.035,.72,.025,mat(0xc2a56c),x+.23,1.34,z+.12);
+}
+for(let i=0;i<5;i++){
+ const sw=new THREE.Mesh(new THREE.SphereGeometry(.055,8,8),mat([0xd64b32,0xd7b13d,0x4b9b68,0x4c83b2,0xaaaaaa][i]));
+ sw.position.set(-.45+i*.22,1.7,1.48);interior.add(sw);
+}
+
+const cams=['CHASE','COCKPIT','FRONT','REAR','LEFT','RIGHT','OVERHEAD'];let camIndex=0;
+let speed=0,steer=0,throttle=0,braking=0,gear='N',distance=0;let target=new THREE.Vector3();
+const wheel=document.querySelector('#wheel');let drag=false,startX=0,startSteer=0;
+wheel.addEventListener('pointerdown',e=>{drag=true;wheel.setPointerCapture(e.pointerId);startX=e.clientX;startSteer=steer});
+wheel.addEventListener('pointermove',e=>{if(drag){steer=THREE.MathUtils.clamp(startSteer+(e.clientX-startX)/(innerWidth*.23),-1,1);wheel.style.transform=`rotate(${steer*145}deg)`}});
+function release(){drag=false}wheel.addEventListener('pointerup',release);wheel.addEventListener('pointercancel',release);
+function hold(id,set){let el=document.getElementById(id);el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);set(1)});['pointerup','pointercancel','pointerleave'].forEach(t=>el.addEventListener(t,()=>set(0)))}
+hold('gas',v=>throttle=v);hold('brake',v=>braking=v);
+document.getElementById('gear').onchange=e=>gear=e.target.value;
+document.getElementById('camera').onclick=()=>{camIndex=(camIndex+1)%cams.length;document.getElementById('camera').textContent='CAMERA: '+cams[camIndex]};
+let doorsOpen=false, lightsOn=false, passengerCount=0, fareTotal=0, onboard=[];
+let companyCash=5000,companyBuses=1,companyDrivers=0,companyRouteName='Accra Central – Madina';
+function refreshCompany(){const el=document.getElementById('companyStats');if(el)el.innerHTML='Cash: GH₵'+companyCash.toFixed(2)+'<br>Fleet: '+companyBuses+' bus(es)<br>Drivers: '+companyDrivers+'<br>Route: '+companyRouteName+'<br>Passenger revenue: GH₵'+fareTotal.toFixed(2);}
+
+let currentFare=5,mateMessage='Mate is ready. Pull up at a station.',destinationMode=0;\nlet storedLuggage=[];const luggageRack=new THREE.Group();bus.add(luggageRack);luggageRack.position.set(0,.15,-2.15);
+showMateMessage(mateMessage);
+
+function showMateMessage(message){
+ mateMessage=message;
+ let panel=document.getElementById('mateStatus');
+ if(!panel){panel=document.createElement('div');panel.id='mateStatus';panel.className='panel';panel.style.cssText='position:fixed;left:10px;bottom:165px;max-width:250px;z-index:12;background:#111d;color:#fff;padding:8px;border-radius:8px';document.body.appendChild(panel);}
+ panel.textContent='MATE: '+mateMessage;
+}
+document.getElementById('company').onclick=()=>{document.getElementById('companyPanel').style.display='block';refreshCompany();};
+document.getElementById('closeCompany').onclick=()=>document.getElementById('companyPanel').style.display='none';
+document.getElementById('companyRoute').onchange=e=>{companyRouteName=e.target.value;refreshCompany();};
+document.getElementById('hireDriver').onclick=()=>{if(companyCash<500){showMateMessage('Company funds are too low to hire a driver.');return;}companyCash-=500;companyDrivers++;refreshCompany();showMateMessage('Driver hired. Company staff updated.');};
+document.getElementById('buyBus').onclick=()=>{if(companyCash<3500){showMateMessage('Not enough company cash for a used bus.');return;}companyCash-=3500;companyBuses++;refreshCompany();showMateMessage('Used bus added to your fleet.');};
+document.getElementById('mate').onclick=()=>{
+ const nearest=stops.reduce((a,b)=>Math.abs(bus.position.z-a.z)<Math.abs(bus.position.z-b.z)?a:b);
+ showMateMessage('Next stop: '+nearest.label+'. Ei, passengers! Make way, please!');
+};
+document.getElementById('fareDown').onclick=()=>{
+ currentFare=Math.max(2,currentFare-1);
+ showMateMessage('Fare adjusted to GH₵'+currentFare.toFixed(2)+' per passenger.');
+};
+document.getElementById('fareUp').onclick=()=>{
+ currentFare=Math.min(30,currentFare+1);
+ showMateMessage('Fare adjusted to GH₵'+currentFare.toFixed(2)+' per passenger.');
+};
+document.getElementById('destination').onclick=()=>{
+ const choices=['NEXT STOP','CIRCLE MARKET','KANESHIE','LAPAZ','MADINA'];
+ destinationMode=(destinationMode+1)%choices.length;
+ document.getElementById('destination').textContent='DESTINATION: '+choices[destinationMode];
+ showMateMessage('Destination set to '+choices[destinationMode]+'.');
+};
+
+
+document.getElementById('inspection').onclick=()=>{
+ const nearCheckpoint=Math.abs(bus.position.z-(-213))<18;
+ const panel=document.getElementById('trafficStatus');
+ if(!nearCheckpoint){panel.innerHTML='POLICE: No checkpoint nearby';return;}
+ if(Math.abs(speed)>=12){policeFineTotal+=100;companyCash=Math.max(0,companyCash-100);refreshCompany();panel.innerHTML='CHECKPOINT FINE: GH₵100<br>Stop fully before inspection';return;}
+ if(inspectionDone){panel.innerHTML='INSPECTION COMPLETE<br>Safe journey';return;}
+ inspectionDone=true;checkpointPassed=true;
+ panel.innerHTML='INSPECTION PASSED<br>Vehicle documents checked';
+};
+
+document.getElementById('doors').onclick=()=>{
+ doorsOpen=!doorsOpen;document.getElementById('doors').textContent='DOORS: '+(doorsOpen?'OPEN':'CLOSED');
+ if(doorsOpen && Math.abs(speed)<3){
+  const stopIndex=stops.findIndex(s=>Math.abs(bus.position.z-s.z)<13);
+  if(stopIndex>=0){
+   const stop=stops[stopIndex];
+   const leaving=onboard.filter(p=>p.destination<=stopIndex);
+   leaving.forEach(p=>{
+    p.avatar.userData.exitStart=performance.now();p.avatar.userData.exitOrigin=p.avatar.position.clone();
+    p.avatar.userData.exitTarget=new THREE.Vector3(3.25,.05,p.avatar.position.z);
+    alightingAnimations.push(p.avatar);bus.remove(p.avatar);scene.add(p.avatar);
+    p.avatar.position.copy(bus.localToWorld(p.avatar.userData.exitOrigin.clone()));
+    onboard=onboard.filter(q=>q!==p);
+   });
+   passengerCount=Math.max(0,passengerCount-leaving.length);
+   let boarded=0;
+   if(!stop.served){
+    const free=Math.max(0,12-passengerCount);
+    boarded=Math.min(free,stop.people.length);
+    stop.people.slice(0,boarded).forEach((person,i)=>{
+     person.userData.boarding=true;person.userData.boardStart=performance.now();person.userData.boardOrigin=person.position.clone();person.userData.boardTarget=new THREE.Vector3(3.15,0,stop.z);boardingAnimations.push(person);
+     const destination=Math.min(stops.length-1,stopIndex+1+Math.floor(Math.random()*2));
+     const avatar=new THREE.Group();
+     const shirt=mat([0x258b68,0xb84a3b,0x3366a0,0xc18a32,0x8a4e9c][i%5]),skin=mat([0x4b2c20,0x68402d,0x80513a,0x9b684d][i%4]),trousers=mat(0x26313a),shoe=mat(0x171b1e);
+     // Seated pose: upright torso, head, bent knees and forearms resting near lap.
+     const body=new THREE.Mesh(new THREE.CapsuleGeometry(.15,.3,4,8),shirt);body.position.y=.78;avatar.add(body);
+     const head=new THREE.Mesh(new THREE.SphereGeometry(.135,12,10),skin);head.position.y=1.13;avatar.add(head);
+     const hair=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),mat(0x211916));hair.scale.set(1,.55,1);hair.position.y=1.22;avatar.add(hair);
+     // V25 character variety: facial features, hair silhouettes and clothing accents.
+     const eyeMat=mat(0x171514),whiteMat=mat(0xf2e9dc),lipMat=mat(0x5b2927);
+     for(const side of [-1,1]){
+      const eye=new THREE.Mesh(new THREE.SphereGeometry(.018,7,6),eyeMat);
+      eye.position.set(side*.052,1.145,.119);avatar.add(eye);
+      const brow=new THREE.Mesh(new THREE.BoxGeometry(.045,.012,.018),mat(0x211916));
+      brow.position.set(side*.052,1.18,.115);avatar.add(brow);
+     }
+     const mouth=new THREE.Mesh(new THREE.BoxGeometry(.045,.012,.012),lipMat);mouth.position.set(0,1.075,.132);avatar.add(mouth);
+     const hairStyle=i%4;
+     if(hairStyle===1){
+      const bun=new THREE.Mesh(new THREE.SphereGeometry(.075,8,7),mat(0x211916));bun.position.set(0,1.29,-.025);avatar.add(bun);
+     }else if(hairStyle===2){
+      const cap=new THREE.Mesh(new THREE.SphereGeometry(.145,10,8),mat(0x25201d));cap.scale.set(1,.28,1);cap.position.set(0,1.245,0);avatar.add(cap);
+     }else if(hairStyle===3){
+      for(const side of [-1,1]){
+       const braid=new THREE.Mesh(new THREE.CylinderGeometry(.025,.018,.22,7),mat(0x211916));
+       braid.position.set(side*.12,1.1,-.045);braid.rotation.z=side*.12;avatar.add(braid);
+      }
+     }
+     const accentColours=[0xe2bd56,0xe8e0d4,0x202a34,0x7b2e2e];
+     const collar=new THREE.Mesh(new THREE.BoxGeometry(.18,.045,.035),mat(accentColours[i%4]));
+     collar.position.set(0,.96,.13);avatar.add(collar);
+     if(i%4===1){
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.07,12),mat(0x234c77));
+      cap.position.set(0,1.26,0);avatar.add(cap);
+     }
+
+     const legs=[],arms=[];
+     for(const side of [-1,1]){
+      const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.3,3,7),trousers);
+      thigh.rotation.x=Math.PI/2;thigh.position.set(side*.09,.49,.17);avatar.add(thigh);legs.push(thigh);
+      const shin=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.27,3,7),trousers);
+      shin.rotation.x=Math.PI/2;shin.position.set(side*.09,.25,.43);avatar.add(shin);legs.push(shin);
+      const foot=new THREE.Mesh(new THREE.BoxGeometry(.13,.09,.22),shoe);foot.position.set(side*.09,.16,.56);avatar.add(foot);
+      const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.25,3,6),skin);
+      arm.rotation.x=-.55;arm.rotation.z=side*.28;arm.position.set(side*.2,.72,.12);avatar.add(arm);arms.push(arm);
+     }
+     avatar.userData={talkPhase:Math.random()*6.28,head,arms,legs,seated:true,baseHeadY:head.position.y,reactionPhase:Math.random()*6.28};
+     if(i%3===0){const bag=new THREE.Mesh(new THREE.BoxGeometry(.2,.25,.12),mat(0x6b4932));bag.position.set(.2,.65,-.12);avatar.add(bag);}
+     const seatSlot=onboard.length;
+     const seatX=seatSlot%2===0?-.72:.72;
+     const seatZ=1.45-Math.floor(seatSlot/2)*.58;
+     avatar.position.set(seatX,.35,seatZ);
+     avatar.rotation.y=Math.PI;
+     bus.add(avatar);
+     const carriesBag=(i%3===0 && storedLuggage.length<8);
+     if(carriesBag){
+      const bagGroup=new THREE.Group();
+      const bagMesh=new THREE.Mesh(new THREE.BoxGeometry(.28,.34,.18),mat([0x6b4932,0x243b54,0x6a2930][i%3]));
+      bagMesh.position.y=.18;bagGroup.add(bagMesh);
+      const handle=new THREE.Mesh(new THREE.BoxGeometry(.12,.035,.035),mat(0x171717));handle.position.set(0,.37,0);bagGroup.add(handle);
+      const slot=storedLuggage.length;bagGroup.position.set((slot%2)*.38-.19,.1,-slot*.27);
+      luggageRack.add(bagGroup);storedLuggage.push(bagGroup);
+     }
+     onboard.push({avatar,destination,paid:false,luggage:carriesBag,seatSlot,seatRow:Math.floor(seatSlot/2)+1,seatSide:seatSlot%2===0?'left':'right'});
+    });
+    stop.served=true;refreshCompany();
+    stop.people.slice(0,boarded).forEach(person=>person.userData.boarded=true);passengerCount+=boarded;
+   }
+   document.getElementById('passengers').innerHTML='Passengers: '+passengerCount+'/12<br>Fare: GH₵'+fareTotal.toFixed(2)+'<br>Fare rate: GH₵'+currentFare.toFixed(2)+'<br>Latest: '+(boarded?'Boarded '+boarded+' — fares pending':'No new fare');
+   document.getElementById('doors').textContent=(leaving.length?'OFF -'+leaving.length+' ':'')+(boarded?'ON +'+boarded:'STOP SERVICED');
+  }else{document.getElementById('doors').textContent='NO STOP NEARBY'}
+ }
+}document.getElementById('lights').onclick=()=>{lightsOn=!lightsOn;document.getElementById('lights').textContent='LIGHTS: '+(lightsOn?'ON':'OFF')};
+document.getElementById('lights').onclick=()=>{
+ lightsOn=!lightsOn;lightMode=lightsOn?'LOW':'OFF';
+ document.getElementById('lights').textContent='LIGHTS: '+lightMode;
+ headlampMat.emissive.setHex(lightsOn?0x777044:0x000000);
+ headlamps.forEach(h=>h.material=headlampMat);
+};
+document.getElementById('indicators').onclick=()=>{
+ indicatorMode=indicatorMode==='OFF'?'LEFT':indicatorMode==='LEFT'?'RIGHT':'OFF';
+ document.getElementById('indicators').textContent='INDICATORS: '+indicatorMode;
+};
+document.getElementById('hazards').onclick=()=>{
+ hazardsOn=!hazardsOn;if(hazardsOn)indicatorMode='OFF';
+ document.getElementById('hazards').textContent='HAZARDS: '+(hazardsOn?'ON':'OFF');
+};
+document.getElementById('wipers').onclick=()=>{
+ wipersOn=!wipersOn;document.getElementById('wipers').textContent='WIPERS: '+(wipersOn?'ON':'OFF');
+};
+
+let passengerReactionUntil=0;
+document.getElementById('horn').onclick=()=>{
+ passengerReactionUntil=performance.now()+1800;
+ document.getElementById('horn').textContent='HONK!';
+ [...crossingWalkers.map(w=>w.mesh),vendor,...stops.flatMap(st=>st.people)].forEach(person=>{
+  if(person && person.position.distanceTo(bus.position)<18){person.rotation.y+=.35;}
+ });
+ setTimeout(()=>document.getElementById('horn').textContent='HORN',500)
+};
+
+
+
+// V28: luggage rack status and loading/unloading interaction.
+document.getElementById('luggage').onclick=()=>{
+ const count=storedLuggage.length;
+ document.getElementById('luggage').textContent='LUGGAGE: '+count+'/8';
+ showMateMessage(count?'Mate: '+count+' bag(s) safely stored in the luggage rack.':'Mate: The luggage rack is empty.');
+};
+\n// V27: mate fare collection and passenger payment status.
+let lastFareReceipt='No fares collected yet.';
+function collectPassengerFares(){
+ const unpaid=onboard.filter(p=>!p.paid);
+ if(!unpaid.length){showMateMessage('Mate: No outstanding fares.');return;}
+ const amount=unpaid.length*currentFare;
+ unpaid.forEach(p=>p.paid=true);
+ fareTotal+=amount;companyCash+=amount;refreshCompany();
+ lastFareReceipt='Collected '+unpaid.length+' fares: GH₵'+amount.toFixed(2);
+ showMateMessage('Mate: '+lastFareReceipt+'. Medaase!');
+ const hud=document.getElementById('passengers');
+ hud.innerHTML='Passengers: '+passengerCount+'/12<br>Revenue: GH₵'+fareTotal.toFixed(2)+'<br>Fare rate: GH₵'+currentFare.toFixed(2)+'<br>'+lastFareReceipt;
+}
+document.getElementById('collectFares').onclick=collectPassengerFares;
+
+// V26: simple Ghanaian mate and passenger dialogue interaction system.
+const talkPanel=document.getElementById('talkPanel'),talkText=document.getElementById('talkText');
+const dialogueLines=[
+ {speaker:'Mate',line:'Circle! Circle! Last stop Circle! Make you come inside!',reply:'I am going to Circle.'},
+ {speaker:'Passenger',line:'Please, driver, can you stop at Kaneshie?',reply:'Yes, I will stop at Kaneshie.'},
+ {speaker:'Mate',line:'Madina, Adenta! Madina direct! Any more passengers?',reply:'We are ready to move.'},
+ {speaker:'Passenger',line:'Driver, please reduce the speed small. The road is rough.',reply:'No problem. I will slow down.'},
+ {speaker:'Mate',line:'Your fare be GH₵5. Please pay before you sit.',reply:'Here is my fare.'},
+ {speaker:'Passenger',line:'Please open the door. This is my bus stop.',reply:'We have arrived. Please alight safely.'},
+ {speaker:'Mate',line:'Driver, traffic dey ahead. Take am easy.',reply:'I will drive carefully.'},
+ {speaker:'Passenger',line:'Thank you, boss. You drive safely.',reply:'You are welcome.'}
+];
+let dialogueIndex=0,replyMode=false;
+function showDialogue(){
+ const d=dialogueLines[dialogueIndex%dialogueLines.length];
+ talkText.textContent=d.speaker+': “'+(replyMode?d.reply:d.line)+'”';
+ talkPanel.style.display='block';
+}
+document.getElementById('dialogue').onclick=()=>{replyMode=false;showDialogue();};
+document.getElementById('talkReply').onclick=()=>{replyMode=true;showDialogue();};
+document.getElementById('talkClose').onclick=()=>{talkPanel.style.display='none';dialogueIndex++;replyMode=false;};
+document.getElementById('mate').addEventListener('click',()=>{
+ dialogueIndex=(dialogueIndex+1)%dialogueLines.length;replyMode=false;showDialogue();
+});
+
+// V15 weather and time-of-day system
+const weatherModes=['CLEAR','CLOUDY','RAIN','FOG','NIGHT','WINDY','STORM'];
+let weatherIndex=0,weatherMode='CLEAR';
+const rainCount=520,rainPositions=new Float32Array(rainCount*3);
+for(let i=0;i<rainCount;i++){
+ rainPositions[i*3]=(Math.random()-.5)*42;
+ rainPositions[i*3+1]=Math.random()*24+2;
+ rainPositions[i*3+2]=(Math.random()-.5)*95-10;
+}
+const rainGeometry=new THREE.BufferGeometry();
+rainGeometry.setAttribute('position',new THREE.BufferAttribute(rainPositions,3));
+const rainMaterial=new THREE.PointsMaterial({color:0xc9e6f5,size:.11,transparent:true,opacity:.75});
+const rainField=new THREE.Points(rainGeometry,rainMaterial);rainField.visible=false;scene.add(rainField);
+const baseSky=0x87b9d2,baseFog=0x87b9d2;
+function applyWeather(mode){
+ weatherMode=mode;
+ const night=mode==='NIGHT',rain=mode==='RAIN',fog=mode==='FOG',cloud=mode==='CLOUDY';
+ scene.background.setHex(night?0x101a32:fog?0x9aa6aa:cloud?0x82939b:baseSky);
+ scene.fog.color.setHex(night?0x182235:fog?0xb8c0c0:cloud?0x87969a:baseFog);
+ scene.fog.near=fog?18:90;scene.fog.far=fog?105:380;
+ sun.intensity=night?.18:cloud?1.0:rain?1.15:2.2;
+ hemi.intensity=night?.35:cloud?1.25:rain?1.35:2.0;
+ sun.color.setHex(night?0x8da9ff:0xfff0d2);
+ asphalt.roughness=rain?.24:.8;
+ asphalt.color.setHex(rain?0x293b43:0x42494b);
+ rainField.visible=rain||mode==='STORM';wipersOn=rain||mode==='STORM';
+ if(mode==='STORM'){scene.background.setHex(0x34404c);scene.fog.color.setHex(0x59656d);sun.intensity=.55;hemi.intensity=.65;asphalt.roughness=.2;asphalt.color.setHex(0x26353b);}
+
+ const wb=document.getElementById('weather');
+ if(wb)wb.textContent='WEATHER: '+mode;
+ const wp=document.getElementById('wipers');
+ if(wp)wp.textContent='WIPERS: '+(wipersOn?'ON':'OFF');
+}
+document.getElementById('weather').onclick=()=>{
+ weatherIndex=(weatherIndex+1)%weatherModes.length;
+ applyWeather(weatherModes[weatherIndex]);
+};
+
+// V29: vehicle condition, pothole impact and paid roadside repair.
+let vehicleDamage=0,breakdown=false,repairMessage='Vehicle condition good.';
+function updateDamageHud(){
+ document.getElementById('damage').textContent='DAMAGE: '+Math.round(vehicleDamage)+'%';
+ document.getElementById('roadStatus').innerHTML='Road: '+(breakdown?'BREAKDOWN':vehicleDamage>0?'Vehicle damage':'Normal')+'<br>Condition: '+Math.max(0,100-Math.round(vehicleDamage))+'%';
+}
+document.getElementById('repair').onclick=()=>{
+ if(vehicleDamage<1){showMateMessage('Mate: No repair needed.');return;}
+ if(Math.abs(speed)>1){showMateMessage('Stop the bus before roadside repairs.');return;}
+ const cost=Math.round(vehicleDamage*8);
+ if(companyCash<cost){showMateMessage('Not enough company cash. Repair costs GH₵'+cost+'.');return;}
+ companyCash-=cost;vehicleDamage=0;breakdown=false;refreshCompany();updateDamageHud();
+ showMateMessage('Mechanic: Repairs complete. GH₵'+cost+' paid. Safe journey!');
+};
+document.getElementById('damage').onclick=()=>showMateMessage(repairMessage);
+\n// V30: roadside fuel station and fuel economy.
+let fuelLevel=100,fuelStationZ=-145,fuelLitresAdded=0;
+const stationGroup=new THREE.Group();
+const stationSign=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.1,.18),mat(0xf0cf35));stationSign.position.set(6.4,2.8,fuelStationZ);scene.add(stationSign);
+const stationPost=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,2.8,8),mat(0x444444));stationPost.position.set(6.4,1.4,fuelStationZ);scene.add(stationPost);
+const stationRoof=new THREE.Mesh(new THREE.BoxGeometry(3.4,.18,2.8),mat(0xc83c2e));stationRoof.position.set(6.4,3.2,fuelStationZ-2);scene.add(stationRoof);
+for(const x of [5.4,7.2]){
+ const pump=new THREE.Mesh(new THREE.BoxGeometry(.55,1.2,.5),mat(0xe9e9e9));pump.position.set(x,.65,fuelStationZ-2.3);scene.add(pump);
+ const display=new THREE.Mesh(new THREE.BoxGeometry(.3,.18,.04),mat(0x18252c));display.position.set(x,.9,fuelStationZ-2.03);scene.add(display);
+}
+function updateFuelHud(){
+ document.getElementById('fuel').textContent='FUEL: '+Math.round(fuelLevel)+'%';
+}
+document.getElementById('fuel').onclick=()=>showMateMessage('Fuel remaining: '+Math.round(fuelLevel)+'%.');
+document.getElementById('refuel').onclick=()=>{
+ const near=Math.abs(bus.position.z-fuelStationZ)<17 && Math.abs(bus.position.x-6.4)<8;
+ if(!near){showMateMessage('Mate: We need to reach the fuel station first.');return;}
+ if(Math.abs(speed)>1){showMateMessage('Stop the bus and switch to neutral before refuelling.');return;}
+ const needed=100-fuelLevel,cost=Math.ceil(needed*3.5);
+ if(needed<1){showMateMessage('Fuel tank is already full.');return;}
+ if(companyCash<cost){showMateMessage('Not enough company cash. Refuelling costs GH₵'+cost+'.');return;}
+ companyCash-=cost;fuelLitresAdded+=needed*.8;fuelLevel=100;refreshCompany();updateFuelHud();
+ showMateMessage('Fuel attendant: Tank full. GH₵'+cost+' paid. Safe journey!');
+};
+\n// V33 first structured route contract: Accra Central to Kaneshie.
+let routeMissionActive=false,routeMissionStage=0,routeMissionDone=false;
+const missionStatus=document.getElementById('missionStatus');
+document.getElementById('missionBtn').onclick=()=>{document.getElementById('missionPanel').style.display='block';};
+document.getElementById('closeMission').onclick=()=>{document.getElementById('missionPanel').style.display='none';};
+document.getElementById('acceptMission').onclick=()=>{
+ if(routeMissionDone){showMateMessage('You have completed this test contract.');return;}
+ routeMissionActive=true;routeMissionStage=0;
+ missionStatus.textContent='Contract accepted. Pick up passengers at Circle Market Stop.';
+ showMateMessage('Mate: Circle first, then Kaneshie. Drive carefully!');
+};
+function updateRouteMission(){
+ if(!routeMissionActive||routeMissionDone)return;
+ if(routeMissionStage===0 && Math.abs(bus.position.z+38)<5 && Math.abs(speed)<1 && doorsOpen){
+  routeMissionStage=1;missionStatus.textContent='Circle pickup complete. Continue to Kaneshie Stop.';
+  showMateMessage('Circle passengers aboard. Next stop: Kaneshie.');
+ }
+ if(routeMissionStage===1 && Math.abs(bus.position.z+105)<6 && Math.abs(speed)<1 && doorsOpen){
+  routeMissionStage=2;routeMissionActive=false;routeMissionDone=true;
+  companyCash+=180;playerXP=(typeof playerXP!=='undefined'?playerXP:0)+75;
+  refreshCompany();
+  missionStatus.textContent='COMPLETED! GH₵180 and 75 XP earned.';
+  showMateMessage('Contract complete! GH₵180 added to company cash.');
+ }
+}
+const clock=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);
+let dt=Math.min(clock.getDelta(),.04);
+updateRouteMission();
+const windBase=weatherMode==='STORM'?1.5:weatherMode==='WINDY'?1.15:weatherMode==='RAIN'?.75:weatherMode==='CLOUDY'?.35:.12;
+for(const tree of forestTrees){
+ const u=tree.userData;
+ u.crown.rotation.z=Math.sin(performance.now()*.00065+u.phase)*.035*u.flex*windBase;
+ u.crown.rotation.x=Math.cos(performance.now()*.00048+u.phase)*.022*u.flex*windBase;
+}
+for(const animal of wildlife){
+ const t=performance.now()*.001*animal.speed+animal.phase;
+ animal.g.position.x=animal.baseX+Math.sin(t)*1.15;
+ animal.g.position.y=.12+Math.abs(Math.sin(t*3))*.035;
+ animal.g.rotation.y=Math.sin(t)*.16;
+}
+for(const bird of birds){
+ const t=performance.now()*.001+bird.phase;
+ bird.mesh.position.x+=dt*1.8;
+ if(bird.mesh.position.x>17)bird.mesh.position.x=-17;
+ bird.mesh.position.y=12+Math.sin(t*2)*.8;
+ bird.mesh.rotation.z=Math.PI/2+Math.sin(t*5)*.12;
+}
+
+ 
+warningFlash+=dt;
+if(weatherMode==='RAIN'||weatherMode==='STORM'){
+ const pos=rainGeometry.attributes.position;
+ for(let i=0;i<rainCount;i++){
+  let y=pos.getY(i)-dt*24;
+  if(y<.5){y=24+Math.random()*5;pos.setX(i,(Math.random()-.5)*42);pos.setZ(i,bus.position.z-10-Math.random()*85);}
+  pos.setY(i,y);
+ }
+ pos.needsUpdate=true;
+ rainField.position.x=bus.position.x;rainField.position.z=bus.position.z;
+}
+
+ const blink=Math.sin(warningFlash*6)>0;
+ indicators.forEach((lamp,i)=>{
+  const left=i===0,active=hazardsOn || (indicatorMode==='LEFT'&&left)||(indicatorMode==='RIGHT'&&!left);
+  lamp.material.emissive.setHex(active&&blink?0xff8a00:0x000000);
+ });
+ taillamps.forEach(l=>l.material.emissive.setHex(braking?0xff2020:0x000000));
+ wiperPhase+=dt*(wipersOn?3.8:0);
+ wiperPivot.rotation.z=wipersOn?Math.sin(wiperPhase)*.62:THREE.MathUtils.lerp(wiperPivot.rotation.z,0,.08);
+
+ // Subtle seated passenger motion: head turns, talking gestures and relaxed movement.
+ for(const rider of onboard){
+  const a=rider.avatar,u=a.userData;u.talkPhase+=dt*(.8+(a.id%3)*.15);
+  u.head.rotation.y=Math.sin(u.talkPhase)*.12;
+  u.head.rotation.x=Math.sin(u.talkPhase*1.7)*.035;
+  const reacting=performance.now()<passengerReactionUntil;
+  if(reacting){u.head.rotation.y+=Math.sin(u.talkPhase*2)*.35;u.head.rotation.x-=.12;}
+  u.arms.forEach((arm,i)=>{arm.rotation.z=(i===0?-.35:.35)+Math.sin(u.talkPhase*1.4+i)*.08+(reacting?(i===0?-.28:.28):0);});
+ }
+ // Alighting passengers walk away from the bus and fade out.
+ for(let i=alightingAnimations.length-1;i>=0;i--){
+  const person=alightingAnimations[i],t=THREE.MathUtils.clamp((performance.now()-person.userData.exitStart)/1100,0,1);
+  person.position.x+=dt*1.2;person.position.y=.05+Math.sin(t*Math.PI)*.08;
+  person.scale.setScalar(1-t);
+  if(t>=1){scene.remove(person);alightingAnimations.splice(i,1);}
+ }
+ // Move boarding passengers one by one toward the bus entrance, then remove them from the queue.
+ for(let i=boardingAnimations.length-1;i>=0;i--){
+  const person=boardingAnimations[i],elapsed=(performance.now()-person.userData.boardStart)/1000;
+  const t=THREE.MathUtils.clamp(elapsed/1.05,0,1);
+  person.position.lerpVectors(person.userData.boardOrigin,person.userData.boardTarget,t);
+  person.position.y+=Math.sin(elapsed*10)*.035;
+  person.rotation.y=Math.sin(elapsed*5)*.08;
+  person.scale.setScalar(Math.max(.02,1-t));
+  if(t>=1){scene.remove(person);boardingAnimations.splice(i,1);}
+ }
+let drive=gear==='R'?-1:gear==='N'?0:1;let ratio=gear==='1'?1:gear==='2'?.75:gear==='3'?.58:gear==='4'?.45:gear==='R'?.55:0;
+speed=THREE.MathUtils.clamp(speed+(throttle*drive*ratio*13*vehicleTune.accel-braking*28*vehicleTune.brake-(throttle?0:2))*dt,-18,vehicleTune.max);
+bus.rotation.y+=steer*speed*.0017*vehicleTune.handling*dt*60;bus.position.z-=speed*dt*.24;bus.position.x+=Math.sin(bus.rotation.y)*Math.abs(speed)*dt*.08;bus.position.x=THREE.MathUtils.clamp(bus.position.x,-5,5);
+for(const hazard of roadHazards){
+ if(!hazard.hit && Math.abs(bus.position.z-hazard.z)<1.15 && Math.abs(bus.position.x-hazard.x)<1.25){
+  hazard.hit=true;
+  if(Math.abs(speed)>22){
+   vehicleDamage=Math.min(100,vehicleDamage+Math.min(28,(Math.abs(speed)-18)*.8));
+   repairMessage='Pothole impact at '+Math.round(Math.abs(speed))+' km/h';
+   if(vehicleDamage>=75){breakdown=true;speed=0;throttle=0;showMateMessage('BUS BREAKDOWN! Stop and call a mechanic.');}
+   else showMateMessage('Hard pothole impact! Vehicle damage '+Math.round(vehicleDamage)+'%.');
+   updateDamageHud();
+  }else{repairMessage='Pothole crossed carefully.';}
+ }
+}
+if(breakdown){throttle=0;speed=0;}
+distance+=Math.abs(speed)*dt/3600;\nif(Math.abs(speed)>.5 && !breakdown){fuelLevel=Math.max(0,fuelLevel-Math.abs(speed)*dt*.00042);updateFuelHud();if(fuelLevel<=0){speed=0;throttle=0;showMateMessage('Fuel empty! Find a fuel station.');}}
+ speedNeedle.rotation.z=-THREE.MathUtils.clamp(Math.abs(speed)/105,0,1)*2.1-.25;rpmNeedle.rotation.z=-THREE.MathUtils.clamp(Math.abs(speed)/105,0,1)*2.35-.25;
+// Traffic vehicles roll along the road; oncoming traffic travels toward the player.
+ for(const car of trafficCars){
+  const dir=car.userData.direction;
+  let targetSpeed=car.userData.baseSpeed;
+  // Follow the traffic lane and leave a safe gap behind vehicles travelling the same way.
+  let leaderGap=Infinity;
+  for(const other of trafficCars){
+   if(other===car || other.userData.direction!==dir) continue;
+   const gap=(other.position.z-car.position.z)*dir;
+   if(gap>0 && gap<leaderGap && Math.abs(other.position.x-car.position.x)<1.5) leaderGap=gap;
+  }
+  if(leaderGap<9) targetSpeed*=Math.max(.12,(leaderGap-2)/7);
+  // Respect the signal at the junction. Each direction has its own stop line.
+  const stopLine=dir<0?-86:-99;
+  const distance=(stopLine-car.position.z)*dir;
+  if(signalPhase===0 && distance>0 && distance<18) targetSpeed*=Math.max(0,(distance-2)/16);
+  if(signalPhase===1 && distance>0 && distance<7) targetSpeed*=Math.max(.15,(distance-1)/6);
+  car.userData.currentSpeed=THREE.MathUtils.lerp(car.userData.currentSpeed??targetSpeed,targetSpeed,Math.min(1,dt*2.5));
+  car.position.z+=dir*car.userData.currentSpeed*dt*.20;
+  // Gentle lane-centering; small corrections keep vehicles inside their lane.
+  car.position.x=THREE.MathUtils.lerp(car.position.x,car.userData.laneX,Math.min(1,dt*2));
+  if(dir<0 && car.position.z<bus.position.z-240)car.position.z=bus.position.z+35+Math.random()*170;
+  if(dir>0 && car.position.z>bus.position.z+80)car.position.z=bus.position.z-100-Math.random()*150;
+  if(Math.abs(car.position.z-bus.position.z)<5 && Math.abs(car.position.x-bus.position.x)<2.2){speed*=.94;}
+ }
+ // Three-phase traffic signal: red, amber, green. A red light gently holds the bus near the junction.
+ signalTimer+=dt;
+ if(signalTimer>7){signalTimer=0;signalPhase=(signalPhase+1)%3;setSignalPhase();}
+ const junctionDistance=Math.abs(bus.position.z-(-92));
+ if(signalPhase===0 && junctionDistance<11 && speed>0){speed=Math.max(0,speed-22*dt);}
+
+// Detect road hazards beneath the bus and give a small handling/speed response.
+ for(const h of roadHazards){
+  const dz=Math.abs(bus.position.z-h.z);
+  const dx=Math.abs(bus.position.x-h.x);
+  if(!h.hit && dz<1.25 && dx<h.radius*.72 && Math.abs(speed)>4 && performance.now()-lastHazardTime>900){
+   h.hit=true;lastHazardTime=performance.now();hazardMessageUntil=performance.now()+2400;
+   if(h.type==='pothole'){speed*=.78;bus.rotation.z=.035;document.getElementById('roadStatus').innerHTML='⚠ POTHOLE HIT<br>Slow down and steer carefully';}
+   else{speed*=.88;bus.rotation.z=.018;document.getElementById('roadStatus').innerHTML='SPEED HUMP<br>Suspension jolted';}
+  }
+ }
+ if(performance.now()>hazardMessageUntil){bus.rotation.z=THREE.MathUtils.lerp(bus.rotation.z,0,.08);document.getElementById('roadStatus').textContent='Road: Watch for hazards';}
+
+// Road-safety zone: warn when travelling above the displayed 50 km/h limit.
+ const inSpeedZone=bus.position.z<-35 && bus.position.z>-78;
+ const speedKmh=Math.abs(speed);
+ const trafficPanel=document.getElementById('trafficStatus');
+ if(inSpeedZone && speedKmh>50){
+  trafficPanel.innerHTML='⚠ SPEED LIMIT 50<br>Overspeed: '+Math.round(speedKmh)+' km/h';
+  if(speedKmh>65&&!overspeedFineIssued){policeFineTotal+=50;companyCash=Math.max(0,companyCash-50);refreshCompany();overspeedFineIssued=true;trafficPanel.innerHTML+=' <br>Fine: GH₵50';}
+ }else if(!inSpeedZone){overspeedFineIssued=false;}
+ else if(!checkpointPassed && Math.abs(bus.position.z-(-213))<3 && speedKmh<12){
+  checkpointPassed=true;checkpointMessageUntil=performance.now()+3500;
+  trafficPanel.innerHTML='POLICE CHECKPOINT<br>Slow approach — proceed carefully';
+ }else if(performance.now()<checkpointMessageUntil){trafficPanel.innerHTML='POLICE CHECKPOINT<br>Proceed carefully';}
+ else{trafficPanel.innerHTML='Traffic: Active<br>Road rules: ON';}
+
+// Animate pedestrians across the marked junction. Pause the bus near the crossing.
+ for(const w of crossingWalkers){
+  if(w.active){
+   w.progress+=dt*w.speed;
+   w.mesh.position.x=THREE.MathUtils.lerp(w.startX,w.endX,Math.min(1,w.progress));
+   if(w.progress>=1)w.active=false;
+  }
+ }
+ const crossingBusy=crossingWalkers.some(w=>w.active && Math.abs(bus.position.z-w.z)<5 && Math.abs(bus.position.x)<5);
+ if(crossingBusy && Math.abs(speed)>0.8){
+  speed=THREE.MathUtils.lerp(speed,0,Math.min(1,dt*2.8));
+  pedestrianWarningUntil=performance.now()+1600;
+  const rs=document.getElementById('roadStatus');if(rs)rs.textContent='PEDESTRIAN CROSSING — SLOW DOWN';
+ }else if(performance.now()>pedestrianWarningUntil){
+  const rs=document.getElementById('roadStatus');if(rs && rs.textContent.includes('PEDESTRIAN'))rs.textContent='Road: Watch for hazards';
+ }
+
+let p=bus.position;
+ // Animate waiting passengers; after a stop is served, walk them toward the bus and fade them out.
+ for(const stop of stops){for(const person of stop.people){if(person.userData.boarding && !person.userData.boardedDone){
+  const elapsed=(performance.now()-person.userData.boardStart)/1000;
+  person.position.x=THREE.MathUtils.lerp(person.position.x,3.2,Math.min(elapsed*.65,1));
+  person.position.z=THREE.MathUtils.lerp(person.position.z,bus.position.z+1.8,Math.min(elapsed*.65,1));
+  person.scale.setScalar(Math.max(.02,1-elapsed*.42));
+  if(elapsed>1.8){scene.remove(person);person.userData.boardedDone=true;}
+ }}}
+ const approaching=stops.find(s=>!s.served && Math.abs(bus.position.z-s.z)<13);
+ if(approaching && Math.abs(speed)<3)document.getElementById('doors').textContent='OPEN TO BOARD';
+
+if(camIndex===0){target.set(p.x+steer*1.5,5.2,p.z+11);camera.position.lerp(target,.12);camera.lookAt(p.x,1.4,p.z-3)}
+if(camIndex===1){target.set(p.x-.35,2.18,p.z+1.15);camera.position.lerp(target,.28);camera.lookAt(p.x,1.9,p.z-12)}
+if(camIndex===2){target.set(p.x,3.5,p.z-8);camera.position.lerp(target,.15);camera.lookAt(p.x,1.5,p.z-18)}
+if(camIndex===3){target.set(p.x,4,p.z+11);camera.position.lerp(target,.15);camera.lookAt(p.x,1.5,p.z+22)}
+if(camIndex===4){target.set(p.x-9,3,p.z+1);camera.position.lerp(target,.15);camera.lookAt(p.x,1.5,p.z-4)}
+if(camIndex===5){target.set(p.x+9,3,p.z+1);camera.position.lerp(target,.15);camera.lookAt(p.x,1.5,p.z-4)}
+if(camIndex===6){target.set(p.x,24,p.z+1);camera.position.lerp(target,.15);camera.lookAt(p.x,0,p.z-5)}
+document.getElementById('stats').innerHTML=Math.round(Math.abs(speed))+' km/h<br>Gear '+gear+' · '+distance.toFixed(2)+' km';
+renderer.render(scene,camera);
+gbsDebug.frames++;const now=performance.now();if(now-gbsDebug.lastFpsAt>=1000){gbsDebug.fps=Math.round(gbsDebug.frames*1000/(now-gbsDebug.lastFpsAt));gbsDebug.frames=0;gbsDebug.lastFpsAt=now;}
+}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+setTimeout(()=>document.getElementById('hint').style.display='none',6500);
+</script></body></html>
