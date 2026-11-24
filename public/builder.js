@@ -100,11 +100,30 @@ $("previewPdf").onclick=async()=>{
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||"Could not prepare the preview.");
     canvas.innerHTML="";
-    const frame=document.createElement("iframe");
-    frame.title="Complete unpaid document preview";
-    frame.src=result.url;
-    frame.style.cssText="display:block;width:100%;height:min(78vh,1000px);min-height:520px;border:0;background:#fff";
-    canvas.appendChild(frame);
+    if(!window.pdfjsLib) throw new Error("The PDF viewer could not load. Please refresh and try again.");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdfResponse=await fetch(result.url,{cache:"no-store"});
+    if(!pdfResponse.ok) throw new Error("The PDF preview could not be loaded. Please try again.");
+    const pdfBytes=await pdfResponse.arrayBuffer();
+    const pdf=await window.pdfjsLib.getDocument({data:pdfBytes}).promise;
+    for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
+      const page=await pdf.getPage(pageNumber);
+      const base=page.getViewport({scale:1});
+      const availableWidth=Math.max(280,canvas.clientWidth-24);
+      const scale=Math.min(2.2,availableWidth/base.width);
+      const viewport=page.getViewport({scale});
+      const pageWrap=document.createElement("div");
+      pageWrap.style.cssText="width:100%;margin:0 auto 16px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.16);overflow:hidden";
+      const pageCanvas=document.createElement("canvas");
+      const pixelRatio=Math.min(window.devicePixelRatio||1,2);
+      pageCanvas.width=Math.floor(viewport.width*pixelRatio);
+      pageCanvas.height=Math.floor(viewport.height*pixelRatio);
+      pageCanvas.style.cssText="display:block;width:100%;height:auto";
+      pageWrap.appendChild(pageCanvas);
+      canvas.appendChild(pageWrap);
+      const context=pageCanvas.getContext("2d");
+      await page.render({canvasContext:context,viewport,transform:pixelRatio===1?null:[pixelRatio,0,0,pixelRatio,0,0]}).promise;
+    }
   }catch(error){
     canvas.textContent=error.message||"Could not prepare the preview. Please try again.";
   }finally{
