@@ -23,13 +23,13 @@
 @media(orientation:landscape){#wheel{width:120px;height:120px}.pedal{height:88px}.controls{bottom:8px}#gear,#horn{bottom:112px}}
 
 #view canvas{width:100%;height:100%;display:block}
-#debugToggle{position:fixed;right:10px;bottom:10px;z-index:80;background:#142a37;color:#fff;border:1px solid #fff8;border-radius:9px;padding:8px 12px}
+#debugToggle{position:fixed;right:10px;top:126px;z-index:110;background:#142a37;color:#fff;border:1px solid #fff8;border-radius:9px;padding:7px 10px;font-size:10px;opacity:.82}
 #debugPanel{display:none;position:fixed;inset:8% 5%;z-index:90;background:#07131df2;border:1px solid #e2bd56;border-radius:14px;padding:14px;overflow:auto;font:13px system-ui}
 #debugLog{white-space:pre-wrap;overflow-wrap:anywhere;max-height:42vh;overflow:auto;background:#0008;padding:8px;border-radius:8px}
 #debugPanel button{padding:8px;margin:4px;background:#d6a83f;color:#111;border:0;border-radius:7px}
 #rotateNotice{display:none;position:fixed;inset:0;z-index:75;background:#08131fee;align-items:center;justify-content:center;text-align:center;padding:28px;font-weight:700;font-size:20px}
 @media(orientation:portrait){#rotateNotice{display:flex}}
-@media(orientation:landscape){.hud{top:6px;left:150px;right:150px;gap:5px}.panel{padding:5px 8px;font-size:10px}#stats{font-size:12px}#extraControls{top:58px!important;left:8px!important;max-height:calc(100vh - 180px);overflow-y:auto;max-width:118px}#extraControls button{font-size:9px;padding:4px 5px}#doors{top:58px!important;left:132px!important;font-size:10px;padding:5px!important}#lights{top:87px!important;left:132px!important;font-size:10px;padding:5px!important}#camera{top:58px;font-size:10px;padding:5px 7px}#missionBtn{top:88px!important;font-size:10px!important;padding:5px!important}#wheel{width:105px;height:105px;border-width:8px}.pedal{width:68px;height:76px;font-size:11px}.pedal small{font-size:9px}.controls{bottom:7px;left:8px;right:8px}#gear{bottom:90px;right:8px}#horn{bottom:90px;left:132px;font-size:10px;padding:5px 7px}#hint{top:44%;font-size:11px}}
+@media(orientation:landscape){.hud{top:6px;left:150px;right:150px;gap:5px}.panel{padding:5px 8px;font-size:10px}#stats{font-size:12px}#extraControls{top:58px!important;left:8px!important;max-height:calc(100vh - 180px);overflow-y:auto;max-width:118px}#extraControls button{font-size:9px;padding:4px 5px}#doors{top:58px!important;left:132px!important;font-size:10px;padding:5px!important}#lights{top:87px!important;left:132px!important;font-size:10px;padding:5px!important}#camera{top:58px;font-size:10px;padding:5px 7px}#missionBtn{top:88px!important;font-size:10px!important;padding:5px!important}#wheel{width:92px;height:92px;border-width:8px;flex:0 0 auto}.pedals{gap:8px;flex:0 0 auto}.pedal{width:clamp(76px,8vw,104px);height:82px;font-size:11px;white-space:normal;line-height:1.15;padding:5px}.pedal small{font-size:9px}.controls{z-index:105;bottom:8px;left:10px;right:10px;gap:8px;pointer-events:none}.controls>*{pointer-events:auto}#gear{bottom:100px;right:10px}#horn{bottom:90px;left:132px;font-size:10px;padding:5px 7px}#hint{top:44%;font-size:11px}}
 </style></head>
 <body>
 <div id="view"></div>
@@ -439,8 +439,16 @@ box(bus,2.95,.22,.22,mat(0x30383b),0,.53,3.18);box(bus,1.15,.52,.08,mat(0x252c30
 for(let i=0;i<7;i++)box(bus,.09,.32,.035,mat(0x899397),-.45+i*.15,1.12,3.27);
 box(bus,1.5,.36,.08,mat(0xf2d45a),0,3.18,2.68);
 for(const x of [-1.7,1.7]){let arm=box(bus,.09,.08,.72,dark,x,2.58,2.2);arm.rotation.x=-.15;box(bus,.34,.28,.16,glass,x*1.04,2.56,1.92);}
-for(const z of [-1.9,-.7,.55,1.8]){box(bus,.035,1.1,.035,mat(0x4b4d4c),-1.61,1.8,z);box(bus,.035,1.1,.035,mat(0x4b4d4c),1.61,1.8,z);}
-const busWheels=[];for(let z of [-2,-.65,.7,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,.28,18),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire)}
+for(const side of [-1,1]){
+ // Proper side glazing, pillars and sliding passenger door details.
+ for(const z of [-1.75,-.55,.68,1.82]){let pane=new THREE.Mesh(new THREE.BoxGeometry(.045,.72,.88),new THREE.MeshStandardMaterial({color:0x173846,metalness:.18,roughness:.18,transparent:true,opacity:.92}));pane.position.set(side*1.605,2.58,z);bus.add(pane);box(bus,.055,.055,.96,dark,side*1.64,2.99,z);box(bus,.055,.055,.96,dark,side*1.64,2.17,z);}
+ for(const z of [-2.2,-1.1,.1,1.25,2.35])box(bus,.07,.94,.055,mat(0x3d4548),side*1.65,2.58,z);
+ // Sliding door seam and handle
+ box(bus,.035,1.72,.045,mat(0x3b4143),side*1.66,1.72,.95);box(bus,.045,.12,.08,mat(0xbfc5c4),side*1.69,1.8,1.25);
+}
+// Front lamps, indicator lenses and a more substantial bumper.
+for(const x of [-1.08,1.08]){box(bus,.42,.22,.08,mat(0xfff0bf),x,1.43,3.22);box(bus,.18,.12,.08,mat(0xff8b22),x*1.38,1.42,3.22);}
+const busWheels=[];for(let z of [-2.05,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.57,.57,.34,24),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.62,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire);let hub=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.355,20),mat(0x9aa2a4,.35));hub.rotation.z=Math.PI/2;hub.position.set(x*1.006,.62,z);bus.add(hub)}
 for(let z of [-2.7,2.7])for(let x of [-.95,.95])box(bus,.45,.22,.08,mat(0xffe4a0),x,1.35,z);
 box(bus,1.4,.35,.08,mat(0xffffff),0,1.1,3.23);
 const interior=new THREE.Group();bus.add(interior);
@@ -1068,7 +1076,7 @@ if(weatherMode==='RAIN'||weatherMode==='STORM'){
   if(t>=1){scene.remove(person);boardingAnimations.splice(i,1);}
  }
 let drive=gear==='R'?-1:gear==='N'?0:1;let ratio=gear==='1'?1:gear==='2'?.75:gear==='3'?.58:gear==='4'?.45:gear==='R'?.55:0;
-speed=THREE.MathUtils.clamp(speed+(throttle*drive*ratio*13*vehicleTune.accel-braking*28*vehicleTune.brake-(throttle?0:2))*dt,-18,vehicleTune.max);
+const neutralDrag=gear==='N'?10:2;speed=THREE.MathUtils.clamp(speed+(throttle*drive*ratio*13*vehicleTune.accel-braking*28*vehicleTune.brake-(throttle?0:neutralDrag))*dt,-18,vehicleTune.max);
 bus.rotation.y+=steer*speed*.0017*vehicleTune.handling*dt*60;bus.position.z-=speed*dt*.24;bus.position.x+=Math.sin(bus.rotation.y)*Math.abs(speed)*dt*.08;bus.position.x=THREE.MathUtils.clamp(bus.position.x,-5,5);for(const tire of busWheels)tire.rotation.x-=speed*dt*.22;updateEngineAudio();
 for(const hazard of roadHazards){
  if(!hazard.hit && Math.abs(bus.position.z-hazard.z)<1.15 && Math.abs(bus.position.x-hazard.x)<1.25){
