@@ -97,12 +97,12 @@ function drawCvTable(doc, heading, value, kind, bodySize = 12, headingSize = 14)
     let x = left;
     cells.forEach((cell, i) => {
       doc.font(bold ? "Times-Bold" : "Times-Roman").fontSize(bodySize).fillColor("#111827");
-      const h = doc.heightOfString(String(cell || ""), { width: widths[i] - 8, lineGap: 2 });
+      const h = doc.heightOfString(String(cell || ""), { width: widths[i] - 8, lineGap: 6 });
       maxHeight = Math.max(maxHeight, h);
-      doc.text(String(cell || ""), x, y, { width: widths[i] - 8, lineGap: 2 });
+      doc.text(String(cell || ""), x, y, { width: widths[i] - 8, lineGap: 6 });
       x += widths[i];
     });
-    doc.y = y + maxHeight + 8;
+    doc.y = y + maxHeight + 12;
   };
   drawCells(headers, true);
   doc.moveTo(left, doc.y - 4).lineTo(left + width, doc.y - 4).strokeColor("#999999").lineWidth(0.6).stroke();
@@ -127,11 +127,11 @@ function drawCvSection(doc, heading, value, accent, splitInline = false, bodySiz
     items.forEach(item => {
       if (doc.y > 735) doc.addPage();
       doc.font("Times-Roman").fontSize(bodySize).fillColor("#111827")
-        .text("•  " + item, { indent: 8, hanging: 3, lineGap: 3 });
+        .text("•  " + item, { indent: 8, hanging: 3, lineGap: 6 });
     });
   } else {
     doc.font("Times-Roman").fontSize(bodySize).fillColor("#111827")
-      .text(items[0] || value, { lineGap: 3 });
+      .text(items[0] || value, { lineGap: 6 });
   }
   doc.moveDown(0.8);
 }
