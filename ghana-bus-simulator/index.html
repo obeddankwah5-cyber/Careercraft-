@@ -5,12 +5,12 @@
 <meta name="theme-color" content="#101820"><title>Ghana Bus Simulator — 3D Mobile Prototype</title>
 <style>
 *{box-sizing:border-box;touch-action:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;color:white;font-family:system-ui,Arial}
-#view{position:absolute;inset:0}canvas{display:block}
+#view{position:absolute;inset:0;z-index:0;pointer-events:none}canvas{display:block;pointer-events:none}#camera,#gear,#horn{z-index:101;pointer-events:auto;touch-action:manipulation}
 .hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
 .panel{background:#07131ddd;border:1px solid #ffffff45;border-radius:12px;padding:8px 11px;font-size:12px;backdrop-filter:blur(5px)}
 #stats{font-size:14px;font-weight:800}
 #camera{position:fixed;top:70px;right:10px;border:1px solid #ffffff66;border-radius:10px;padding:9px 12px;background:#07131ddd;color:white}
-.controls{position:fixed;bottom:12px;left:12px;right:12px;display:flex;align-items:end;justify-content:space-between}
+.controls{position:fixed;z-index:100;pointer-events:auto;bottom:12px;left:12px;right:12px;display:flex;align-items:end;justify-content:space-between;isolation:isolate}.controls button,#wheel{pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}.pedal:active,#horn:active,#camera:active{filter:brightness(1.5);transform:scale(.97)}
 #wheel{width:min(34vw,145px);height:min(34vw,145px);border:10px solid #202a31;border-radius:50%;background:radial-gradient(circle,#202a31 0 22%,#657078 23% 28%,transparent 29%);position:relative;box-shadow:0 5px 15px #0009}
 #wheel:before,#wheel:after{content:"";position:absolute;left:calc(50% - 5px);top:8%;width:10px;height:84%;background:#28343b;border-radius:8px}#wheel:after{transform:rotate(90deg)}
 #hub{position:absolute;inset:39%;border-radius:50%;background:#aeb9bd;border:5px solid #1c272d}
@@ -109,9 +109,9 @@ const hemi=new THREE.HemisphereLight(0xd9efff,0x5b503c,2.0);scene.add(hemi);cons
 const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
 const asphalt=mat(0x42494b),sand=mat(0xc8b17b),grass=mat(0x557c43),yellow=mat(0xe6bd20),dark=mat(0x18242b),glass= new THREE.MeshStandardMaterial({color:0x294c5b,metalness:.15,roughness:.22});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
-const road=new THREE.Mesh(new THREE.PlaneGeometry(15,700),asphalt);road.rotation.x=-Math.PI/2;road.position.set(0,0,-300);road.receiveShadow=true;scene.add(road);
-for(let x of [-7.15,7.15]){let line=new THREE.Mesh(new THREE.BoxGeometry(.16,.025,700),mat(0xf2e6bc));line.position.set(x,.02,-300);scene.add(line)}
-for(let z=12;z>-650;z-=18){let dash=new THREE.Mesh(new THREE.BoxGeometry(.18,.03,7),mat(0xf4e7bd));dash.position.set(0,.03,z);scene.add(dash)}
+const roadLength=5200,roadCenter=-2550;const road=new THREE.Mesh(new THREE.PlaneGeometry(20,roadLength),asphalt);road.rotation.x=-Math.PI/2;road.position.set(0,0,roadCenter);road.receiveShadow=true;scene.add(road);
+for(let x of [-9.55,9.55]){let line=new THREE.Mesh(new THREE.BoxGeometry(.2,.035,roadLength),mat(0xf2e6bc));line.position.set(x,.025,roadCenter);scene.add(line)}
+for(let z=15;z>-5100;z-=18){let dash=new THREE.Mesh(new THREE.BoxGeometry(.22,.04,7.5),mat(0xf4e7bd));dash.position.set(0,.035,z);scene.add(dash)}
 // Ghanaian roadside blocks, kiosks and palms as lightweight repeated geometry
 function building(x,z,w,h,d,color){let b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));b.position.set(x,h/2,z);b.castShadow=true;b.receiveShadow=true;scene.add(b);let roof=new THREE.Mesh(new THREE.BoxGeometry(w*1.04,.25,d*1.04),mat(0x754c35));roof.position.set(x,h+.12,z);scene.add(roof);for(let yy=1.2;yy<h-.4;yy+=1.5)for(let xx=-w/2+.7;xx<w/2-.3;xx+=1.5){let win=new THREE.Mesh(new THREE.BoxGeometry(.65,.65,.04),glass);win.position.set(x+xx,yy,z+d/2+.025);scene.add(win)}}
 for(let z=5;z>-260;z-=22){building(-13-(Math.random()*5),z,7,5+Math.random()*9,8,[0xd3a36c,0xc7b8a1,0xb77c54,0xd4c6a0][Math.floor(Math.random()*4)]);building(13+Math.random()*5,z,7,4+Math.random()*8,8,[0xd0b18a,0xb7a18a,0xc88e62][Math.floor(Math.random()*3)])}
@@ -203,7 +203,7 @@ for(let i=0;i<9;i++){
 }
 
 function palm(x,z){let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,5,7),mat(0x795535));trunk.position.set(x,2.5,z);scene.add(trunk);for(let i=0;i<7;i++){let leaf=new THREE.Mesh(new THREE.ConeGeometry(.45,4,5),mat(0x286b3b));leaf.position.set(x+Math.cos(i*Math.PI/3.5)*1.2,5.1,z+Math.sin(i*Math.PI/3.5)*1.2);leaf.rotation.z=Math.PI/2;leaf.rotation.y=i*Math.PI/3.5;scene.add(leaf)}}
-for(let z=0;z>-250;z-=35){palm(-9,z);palm(9,z)}
+for(let z=0;z>-5100;z-=42){palm(-12,z);palm(12,z)}
 
 // V16 Accra streetscape: Ghana-style shopfronts, market stalls, bus stops and road signs.
 function labelTexture(title,sub,color='#f4c542'){
@@ -432,7 +432,14 @@ const alightingAnimations=[];
 // Bus body
 const bus=new THREE.Group();scene.add(bus);
 function box(parent,w,h,d,material,x,y,z){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
-box(bus,3.1,2.65,6.4,yellow,0,1.65,0);box(bus,2.85,1.05,5.8,glass,0,2.65,-.1);box(bus,2.9,.38,1.0,dark,0,3.0,2.85);box(bus,2.9,.3,.9,dark,0,.55,-2.8);
+box(bus,3.18,2.5,6.35,yellow,0,1.62,0);box(bus,2.98,1.12,5.65,glass,0,2.72,-.12);box(bus,3.02,.3,1.05,dark,0,2.98,2.82);box(bus,3.02,.26,.92,dark,0,.53,-2.82);
+// Exterior details: windscreen pillars, bumper, grille, mirrors, sliding door and route board.
+for(const x of [-1.43,-.72,0,.72,1.43])box(bus,.055,1.02,.07,dark,x,2.73,2.73);
+box(bus,2.95,.22,.22,mat(0x30383b),0,.53,3.18);box(bus,1.15,.52,.08,mat(0x252c30),0,1.12,3.22);
+for(let i=0;i<7;i++)box(bus,.09,.32,.035,mat(0x899397),-.45+i*.15,1.12,3.27);
+box(bus,1.5,.36,.08,mat(0xf2d45a),0,3.18,2.68);
+for(const x of [-1.7,1.7]){let arm=box(bus,.09,.08,.72,dark,x,2.58,2.2);arm.rotation.x=-.15;box(bus,.34,.28,.16,glass,x*1.04,2.56,1.92);}
+for(const z of [-1.9,-.7,.55,1.8]){box(bus,.035,1.1,.035,mat(0x4b4d4c),-1.61,1.8,z);box(bus,.035,1.1,.035,mat(0x4b4d4c),1.61,1.8,z);}
 const busWheels=[];for(let z of [-2,-.65,.7,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,.28,18),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire)}
 for(let z of [-2.7,2.7])for(let x of [-.95,.95])box(bus,.45,.22,.08,mat(0xffe4a0),x,1.35,z);
 box(bus,1.4,.35,.08,mat(0xffffff),0,1.1,3.23);
@@ -629,10 +636,10 @@ let speed=0,steer=0,throttle=0,braking=0,gear='N',distance=0;let target=new THRE
 const wheel=document.querySelector('#wheel');let drag=false,startX=0,startSteer=0;
 wheel.addEventListener('pointerdown',e=>{drag=true;wheel.setPointerCapture(e.pointerId);startX=e.clientX;startSteer=steer});
 wheel.addEventListener('pointermove',e=>{if(drag){steer=THREE.MathUtils.clamp(startSteer+(e.clientX-startX)/(innerWidth*.23),-1,1);wheel.style.transform=`rotate(${steer*145}deg)`}});
-function release(){drag=false}wheel.addEventListener('pointerup',release);wheel.addEventListener('pointercancel',release);
-function hold(id,set){let el=document.getElementById(id);el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);set(1)});['pointerup','pointercancel','pointerleave'].forEach(t=>el.addEventListener(t,()=>set(0)))}
+function release(){drag=false}wheel.addEventListener('pointerup',release);wheel.addEventListener('pointercancel',release);window.addEventListener('pointerup',release);window.addEventListener('pointercancel',release);
+function hold(id,set){let el=document.getElementById(id);if(!el)return;let activePointers=new Set();const down=e=>{e.preventDefault();activePointers.add(e.pointerId);try{el.setPointerCapture(e.pointerId)}catch(_){}set(1);el.style.filter='brightness(1.45)'};const up=e=>{activePointers.delete(e.pointerId);if(!activePointers.size){set(0);el.style.filter=''}};el.addEventListener('pointerdown',down,{passive:false});el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);el.addEventListener('contextmenu',e=>e.preventDefault())}
 hold('gas',v=>throttle=v);hold('brake',v=>braking=v);
-document.getElementById('gear').onchange=e=>gear=e.target.value;
+const gearControl=document.getElementById('gear');gearControl.addEventListener('change',e=>{gear=e.target.value;showMateMessage('Gear selected: '+gear);});gearControl.addEventListener('input',e=>{gear=e.target.value;});
 
 // V37: mobile-friendly generated engine audio and horn. Audio starts only after a user gesture.
 let gameAudio=null,engineOsc=null,engineGain=null,engineFilter=null,hornOsc=null,hornGain=null;
