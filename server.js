@@ -304,11 +304,15 @@ function makePdf(order, outputOverride = null, watermark = false) {
       drawTenancyAgreement(doc,d,accent,fontSize,headingSize);
     } else {
       if (d.documentType === "cv") {
-        drawCvSection(doc, "PROFESSIONAL SUMMARY", clean(d.summary, 6000), accent, false, fontSize, headingSize);
-        drawCvSection(doc, "KEY SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
-        drawCvTable(doc, "WORK EXPERIENCE", clean(d.experience, 6000), "experience", fontSize, headingSize);
+        drawCvSection(doc, "PROFILE", clean(d.summary, 6000), accent, false, fontSize, headingSize);
+        const personal = [["Date of Birth", d.dateOfBirth], ["Place of Birth", d.placeOfBirth], ["Nationality", d.nationality], ["Language", d.language], ["Marital Status", d.maritalStatus], ["Contact", d.personalContact || d.phone]].filter(([,v]) => String(v || "").trim()).map(([k,v]) => k + ": " + v).join("\n");
+        drawCvSection(doc, "PERSONAL INFORMATION", personal, accent, false, fontSize, headingSize);
+        drawCvSection(doc, "SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
+        drawCvSection(doc, "INTEREST AND HOBBIES", clean(d.interests, 3000), accent, true, fontSize, headingSize);
+        drawCvTable(doc, "EDUCATION BACKGROUND", clean(d.education, 6000), "education", fontSize, headingSize);
+        drawCvTable(doc, "WORKING EXPERIENCE", clean(d.experience, 6000), "experience", fontSize, headingSize);
         drawCvTable(doc, "EDUCATION", clean(d.education, 6000), "education", fontSize, headingSize);
-        drawCvSection(doc, "REFERENCES", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
+        drawCvSection(doc, "REFERENCE", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
         drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), accent, false, fontSize, headingSize);
       } else {
         sections.forEach(([heading, value]) => {
@@ -338,7 +342,7 @@ app.post("/api/preview", async (req, res) => {
       documentType: clean(input.documentType, 20), template: clean(input.template, 40),
       fullName: clean(input.fullName, 100), email: clean(input.email, 150),
       phone: clean(input.phone, 40), location: clean(input.location, 120),
-      targetRole: clean(input.targetRole, 120), references: clean(input.references, 1000), pageTheme: clean(input.pageTheme,20), fontSize: Number(input.fontSize)||12, headingSize: Number(input.headingSize)||14, watermarkEnabled: input.watermarkEnabled===true, watermarkText: clean(input.watermarkText,32),
+      targetRole: clean(input.targetRole, 120), dateOfBirth: clean(input.dateOfBirth, 40), placeOfBirth: clean(input.placeOfBirth, 120), nationality: clean(input.nationality, 80), language: clean(input.language, 120), maritalStatus: clean(input.maritalStatus, 60), personalContact: clean(input.personalContact, 60), interests: clean(input.interests, 3000), references: clean(input.references, 1000), pageTheme: clean(input.pageTheme,20), fontSize: Number(input.fontSize)||12, headingSize: Number(input.headingSize)||14, watermarkEnabled: input.watermarkEnabled===true, watermarkText: clean(input.watermarkText,32),
       summary: clean(input.summary), experience: clean(input.experience),
       education: clean(input.education), skills: clean(input.skills), extra: clean(input.extra),
       recipient: clean(input.recipient), subject: clean(input.subject), body: clean(input.body, 12000),
