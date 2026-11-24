@@ -286,7 +286,14 @@ function makePdf(order, outputOverride = null, watermark = false) {
       doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827");
       const sender = [clean(d.fullName), clean(d.location), clean(d.phone), clean(d.email)].filter(Boolean).join("\n");
       doc.text(sender, { align: plainDesign || layout !== 2 ? "right" : "left", lineGap: 3 });
-      doc.moveDown(1.5);
+      doc.moveDown(0.5);
+      const applicationDate = clean(d.date, 40);
+      if (applicationDate) {
+        const parsedDate = new Date(applicationDate + "T12:00:00");
+        const displayDate = Number.isNaN(parsedDate.getTime()) ? applicationDate : parsedDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+        doc.text(displayDate, { align: "left" });
+      }
+      doc.moveDown(1.2);
       const recipientAddress = [clean(d.recipientManager || "The HR Manager", 160), clean(d.recipientCompany, 200), clean(d.recipientPoBox, 100), clean(d.recipientLocation, 160)].filter(Boolean).join("\n");
        doc.text(recipientAddress || clean(d.recipient), { lineGap: 3 });
       doc.moveDown(1.5);
@@ -344,7 +351,7 @@ app.post("/api/preview", async (req, res) => {
       targetRole: clean(input.targetRole, 120), dateOfBirth: clean(input.dateOfBirth, 40), placeOfBirth: clean(input.placeOfBirth, 120), nationality: clean(input.nationality, 80), language: clean(input.language, 120), maritalStatus: clean(input.maritalStatus, 60), personalContact: clean(input.personalContact, 60), interests: clean(input.interests, 3000), references: clean(input.references, 1000), pageTheme: clean(input.pageTheme,20), fontSize: Number(input.fontSize)||12, headingSize: Number(input.headingSize)||14, watermarkEnabled: input.watermarkEnabled===true, watermarkText: clean(input.watermarkText,32),
       summary: clean(input.summary), experience: clean(input.experience),
       education: clean(input.education), skills: clean(input.skills), extra: clean(input.extra),
-      recipient: clean(input.recipient), recipientManager: clean(input.recipientManager, 160), recipientCompany: clean(input.recipientCompany, 200), recipientPoBox: clean(input.recipientPoBox, 100), recipientLocation: clean(input.recipientLocation, 160), subject: clean(input.subject), body: clean(input.body, 12000),
+      date: clean(input.date, 40), recipient: clean(input.recipient), recipientManager: clean(input.recipientManager, 160), recipientCompany: clean(input.recipientCompany, 200), recipientPoBox: clean(input.recipientPoBox, 100), recipientLocation: clean(input.recipientLocation, 160), subject: clean(input.subject), body: clean(input.body, 12000),
       landlord: clean(input.landlord), tenant: clean(input.tenant),
       propertyAddress: clean(input.propertyAddress), rent: clean(input.rent),
       period: clean(input.period), terms: clean(input.terms, 6000),
