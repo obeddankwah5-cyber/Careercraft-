@@ -81,7 +81,11 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;
   const width = right - left;
-  const body = fontSize;
+  const body = 12;
+  const heading = 18;
+  const half = width / 2;
+  const columnGap = 22;
+  const columnWidth = (width - columnGap) / 2;
 
   const field = (label, value) => {
     doc.font("Times-Roman").fontSize(body).fillColor("#111111")
@@ -89,9 +93,9 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
     doc.moveDown(0.65);
   };
 
-  doc.font("Times-Bold").fontSize(headingSize + 4).fillColor("#000000")
+  doc.font("Times-Bold").fontSize(heading).fillColor("#000000")
     .text("TENANCY AGREEMENT", { align: "center" });
-  doc.moveDown(2);
+  doc.moveDown(1.8);
 
   doc.font("Times-Roman").fontSize(body).fillColor("#111111")
     .text("This Tenancy Agreement is made this _____ day of __________, 20____, between " +
@@ -110,52 +114,54 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
   doc.font("Times-Roman").fontSize(body).fillColor("#111111")
     .text("The rent shall be paid to the Landlord through an agreed payment method and within the stipulated period.",
       { width, lineGap: 3, align: "justify" });
-  doc.moveDown(1.6);
+  doc.moveDown(1.4);
 
-  doc.font("Times-Bold").fontSize(headingSize).fillColor("#000000")
+  doc.font("Times-Bold").fontSize(heading).fillColor("#000000")
     .text("TERMS AND CONDITION");
-  doc.moveDown(1.2);
+  doc.moveDown(1);
 
   const clauses = listItems(d.terms || "");
   clauses.forEach((clause, index) => {
-    // The reference tenancy layout has clauses 1-9 on page one and starts
-    // clauses 10-16 at the top of page two.
+    // Keep the reference split: clauses 1-9 on page one, clause 10 onward on page two.
     if (index === 9) doc.addPage();
 
     const cleanClause = clause.replace(/^\s*\d{1,2}[.)]\s*/, "");
-    const number = (index + 1) + ". ";
-    const options = { width: width - 8, indent: 8, hanging: 4, lineGap: 3, align: "left" };
     doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-      .text(number + cleanClause, options);
-    doc.moveDown(0.9);
+      .text((index + 1) + ". " + cleanClause, {
+        width: width - 8, indent: 8, hanging: 4, lineGap: 3, align: "left"
+      });
+    doc.moveDown(0.8);
   });
 
-  // Match the supplied second-page closing and signature layout exactly.
-  doc.moveDown(1.2);
+  doc.moveDown(1);
   doc.font("Times-Roman").fontSize(body).fillColor("#111111")
     .text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",
       { width, lineGap: 3, align: "justify" });
-  doc.moveDown(3);
+  doc.moveDown(2);
 
-  const row1 = 54, row2 = 88, half = width / 2;
-  const tableHeight = row1 + row2;
-  const bottom = doc.page.height - doc.page.margins.bottom;
-  if (doc.y + tableHeight > bottom) doc.addPage();
-  const y = doc.y;
+  // Plain signature layout: no enclosing box, borders, or table.
+  const signatureY = doc.y;
+  const signatureLine = "........................................................";
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+    .text(signatureLine, left, signatureY, { width: columnWidth })
+    .text(signatureLine, left + columnWidth + columnGap, signatureY, { width: columnWidth });
+  doc.moveDown(0.35);
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+    .text("NAME OF LANDLADY\nNUMBER", left, doc.y, { width: columnWidth, lineGap: 2 })
+    .text("NAME OF TENANT\nNUMBER", left + columnWidth + columnGap, doc.y, { width: columnWidth, lineGap: 2 });
 
-  doc.rect(left, y, half, tableHeight).strokeColor("#777777").lineWidth(.8).stroke();
-  doc.moveTo(left + half, y).lineTo(left + half, y + tableHeight).stroke();
-  doc.moveTo(left, y + row1).lineTo(right, y + row1).stroke();
+  doc.moveDown(1.2);
+  doc.font("Times-Bold").fontSize(body).fillColor("#000000").text("WITNESSES");
+  doc.moveDown(0.7);
 
-  doc.font("Times-Roman").fontSize(10).fillColor("#111111")
-    .text("........................................................\nNAME OF LANDLADY\nNUMBER", left + 7, y + 8, { width: half - 14, lineGap: 2 })
-    .text("........................................................\nNAME OF TENANT\nNUMBER", left + half + 7, y + 8, { width: half - 14, lineGap: 2 });
-
-  doc.font("Times-Bold").fontSize(10).fillColor("#111111")
-    .text("WITNESSES", left + 7, y + row1 + 8);
-  doc.font("Times-Roman").fontSize(9.5).fillColor("#111111")
-    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + 7, y + row1 + 34, { width: half - 14, lineGap: 2 })
-    .text(".........................................................\nNAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + half + 7, y + row1 + 34, { width: half - 14, lineGap: 2 });
+  const witnessY = doc.y;
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+    .text(signatureLine, left, witnessY, { width: columnWidth })
+    .text(signatureLine, left + columnWidth + columnGap, witnessY, { width: columnWidth });
+  doc.moveDown(0.35);
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
+    .text("NAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left, doc.y, { width: columnWidth, lineGap: 2 })
+    .text("NAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + columnWidth + columnGap, doc.y, { width: columnWidth, lineGap: 2 });
 }
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
