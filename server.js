@@ -83,86 +83,86 @@ function drawTenancyAgreement(doc, d, accent, fontSize, headingSize) {
   const width = right - left;
   const body = 12;
   const heading = 18;
-  const half = width / 2;
-  const columnGap = 22;
+  const columnGap = 24;
   const columnWidth = (width - columnGap) / 2;
+  const line = "........................................................";
 
-  const field = (label, value) => {
+  const paragraph = (value, options = {}) => {
     doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-      .text(label + " " + (value || "________________________________"), { width, lineGap: 3 });
-    doc.moveDown(0.65);
+      .text(value, { width, lineGap: 3, ...options });
   };
 
   doc.font("Times-Bold").fontSize(heading).fillColor("#000000")
-    .text("TENANCY AGREEMENT", { align: "center" });
-  doc.moveDown(1.8);
-
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("This Tenancy Agreement is made this _____ day of __________, 20____, between " +
-      (d.landlord || "____________________________") +
-      ", hereinafter referred to as the Landlord, and " +
-      (d.tenant || "____________________________") +
-      ", hereinafter referred to as the Tenant.",
-      { width, lineGap: 3, align: "justify" });
-  doc.moveDown(1);
-
-  field("The Landlord hereby agrees to rent out to the Tenant the property situated at",
-    d.propertyAddress || "________________________________________ for residential purposes.");
-  field("The Tenant agrees to occupy the property for a period of", d.period);
-  field("The Tenant agrees to pay rent in the sum of GH₵", d.rent);
-
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("The rent shall be paid to the Landlord through an agreed payment method and within the stipulated period.",
-      { width, lineGap: 3, align: "justify" });
+    .text("TENANCY AGREEMENT", { width, align: "center" });
   doc.moveDown(1.4);
+
+  paragraph("This Tenancy Agreement is made this _____ day of __________, 20____, between " +
+    (d.landlord || "____________________________") +
+    ", hereinafter referred to as the Landlord, and " +
+    (d.tenant || "____________________________") +
+    ", hereinafter referred to as the Tenant.", { align: "justify" });
+  doc.moveDown(0.9);
+
+  paragraph("The Landlord hereby agrees to rent out to the Tenant the property situated at " +
+    (d.propertyAddress || "________________________________________") +
+    " for residential purposes.", { align: "justify" });
+  doc.moveDown(0.8);
+
+  paragraph("The Tenant agrees to occupy the property for a period of " +
+    (d.period || "____________") +
+    ", commencing on the _____ day of __________, 20____, and ending on the _____ day of __________, 20____.",
+    { align: "justify" });
+  doc.moveDown(0.8);
+
+  paragraph("The Tenant agrees to pay rent in the sum of GH₵ " +
+    (d.rent || "____________") +
+    " for the agreed tenancy period. The rent shall be paid to the Landlord through an agreed payment method and within the stipulated period.",
+    { align: "justify" });
+  doc.moveDown(1.1);
 
   doc.font("Times-Bold").fontSize(heading).fillColor("#000000")
     .text("TERMS AND CONDITION");
-  doc.moveDown(1);
+  doc.moveDown(0.7);
 
   const clauses = listItems(d.terms || "");
   clauses.forEach((clause, index) => {
-    // Keep the reference split: clauses 1-9 on page one, clause 10 onward on page two.
     if (index === 9) doc.addPage();
-
     const cleanClause = clause.replace(/^\s*\d{1,2}[.)]\s*/, "");
     doc.font("Times-Roman").fontSize(body).fillColor("#111111")
       .text((index + 1) + ". " + cleanClause, {
-        width: width - 8, indent: 8, hanging: 4, lineGap: 3, align: "left"
+        width, lineGap: 3, align: "left"
       });
-    doc.moveDown(0.8);
+    doc.moveDown(0.65);
   });
 
-  doc.moveDown(1);
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",
-      { width, lineGap: 3, align: "justify" });
-  doc.moveDown(2);
+  // Keep the closing and signatures together rather than letting them split awkwardly.
+  if (doc.y > 625) doc.addPage();
+  doc.moveDown(0.6);
+  paragraph("IN WITNESS WHEREOF, both parties have agreed to the terms and conditions stated above and have signed this agreement on the date first written above.",
+    { align: "justify" });
+  doc.moveDown(1.6);
 
-  // Plain signature layout: no enclosing box, borders, or table.
   const signatureY = doc.y;
-  const signatureLine = "........................................................";
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text(signatureLine, left, signatureY, { width: columnWidth })
-    .text(signatureLine, left + columnWidth + columnGap, signatureY, { width: columnWidth });
-  doc.moveDown(0.35);
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("NAME OF LANDLADY\nNUMBER", left, doc.y, { width: columnWidth, lineGap: 2 })
-    .text("NAME OF TENANT\nNUMBER", left + columnWidth + columnGap, doc.y, { width: columnWidth, lineGap: 2 });
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111");
+  doc.text(line, left, signatureY, { width: columnWidth });
+  doc.text(line, left + columnWidth + columnGap, signatureY, { width: columnWidth });
+  const namesY = signatureY + 17;
+  doc.text("NAME OF LANDLADY\nNUMBER", left, namesY, { width: columnWidth, lineGap: 2 });
+  doc.text("NAME OF TENANT\nNUMBER", left + columnWidth + columnGap, namesY, { width: columnWidth, lineGap: 2 });
 
-  doc.moveDown(1.2);
-  doc.font("Times-Bold").fontSize(body).fillColor("#000000").text("WITNESSES");
-  doc.moveDown(0.7);
-
-  const witnessY = doc.y;
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text(signatureLine, left, witnessY, { width: columnWidth })
-    .text(signatureLine, left + columnWidth + columnGap, witnessY, { width: columnWidth });
-  doc.moveDown(0.35);
-  doc.font("Times-Roman").fontSize(body).fillColor("#111111")
-    .text("NAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left, doc.y, { width: columnWidth, lineGap: 2 })
-    .text("NAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)", left + columnWidth + columnGap, doc.y, { width: columnWidth, lineGap: 2 });
+  const witnessHeadingY = namesY + 43;
+  doc.font("Times-Bold").fontSize(body).fillColor("#000000")
+    .text("WITNESSES", left, witnessHeadingY, { width });
+  const witnessLineY = witnessHeadingY + 28;
+  doc.font("Times-Roman").fontSize(body).fillColor("#111111");
+  doc.text(line, left, witnessLineY, { width: columnWidth });
+  doc.text(line, left + columnWidth + columnGap, witnessLineY, { width: columnWidth });
+  const witnessNamesY = witnessLineY + 17;
+  const witnessLabel = "NAME OF WITNESS (OR LEAVE A LINE)\nNUMBER (OR LEAVE A LINE)";
+  doc.text(witnessLabel, left, witnessNamesY, { width: columnWidth, lineGap: 2 });
+  doc.text(witnessLabel, left + columnWidth + columnGap, witnessNamesY, { width: columnWidth, lineGap: 2 });
 }
+
 function makePdf(order, outputOverride = null, watermark = false) {
   return new Promise((resolve, reject) => {
     const output = outputOverride || path.join(DATA_DIR, order.token + ".pdf");
@@ -170,7 +170,18 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
     if (watermark) {
-      const stamp = () => { doc.save().fillColor("#a0a0a0").opacity(0.22).font("Times-Bold").fontSize(34).rotate(-32, { origin: [297, 421] }).text("UNPAID PREVIEW", 75, 390, { width: 450, align: "center" }).restore(); };
+      const stamp = () => {
+        const savedX = doc.x;
+        const savedY = doc.y;
+        doc.save();
+        doc.fillColor("#a0a0a0").opacity(0.16).font("Times-Bold").fontSize(27)
+          .rotate(-32, { origin: [297, 421] })
+          .text("UNPAID PREVIEW", 75, 390, { width: 450, align: "center", lineBreak: false });
+        doc.restore();
+        // Drawing the watermark must never move the document's text cursor.
+        doc.x = savedX;
+        doc.y = savedY;
+      };
       doc.on("pageAdded", stamp);
       stamp();
     }
@@ -185,7 +196,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
     if(d.watermarkEnabled&&clean(d.watermarkText,32)){const mark=()=>doc.save().fillColor(accent).opacity(.10).font("Times-Bold").fontSize(38).rotate(-32,{origin:[297,421]}).text(clean(d.watermarkText,32),55,390,{width:480,align:"center"}).restore();doc.on("pageAdded",mark);mark();}
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
-    if (d.documentType !== "letter") {
+    if (d.documentType !== "letter" && d.documentType !== "tenancy") {
       doc.font("Times-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
       doc.moveDown(0.35);
       if (d.email || d.phone || d.location) {
