@@ -115,6 +115,7 @@ function drawCvTable(doc, heading, value, kind, bodySize = 12, headingSize = 14)
     drawCells(row);
   });
   doc.moveDown(0.6);
+  doc.x = left;
 }
 function drawCvSection(doc, heading, value, accent, splitInline = false, bodySize = 12, headingSize = 14) {
   if (!String(value || "").trim()) return;
