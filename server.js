@@ -249,8 +249,8 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const fontSize=Math.max(10,Math.min(14,Number(d.fontSize)||12));
     const headingSize=Math.max(12,Math.min(16,Number(d.headingSize)||14));
     const themeMap={plain:'#222222',navy:'#263b68',green:'#17675e',burgundy:'#783b4b',charcoal:'#353535',sand:'#80604b',purple:'#7544dc'};
-    const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d"];
-    const designNumber=Math.max(1,Math.min(20,Number(String(d.template||"").split("-").pop())||1));
+    const palette=["#263b68","#315d72","#80604b","#41414b","#7544dc","#17675e","#252b38","#8a593c","#44516a","#365d86","#245b70","#6a4d7c","#3f5960","#9a563d","#4d547d","#353535","#183f68","#7b5a49","#285b50","#63438d","#24527a","#8b5e3c","#355c7d","#6c477b","#3b6d68","#a05a45","#34495e","#94724d","#526b8c","#56436d"];
+    const designNumber=Math.max(1,Math.min(30,Number(String(d.template||"").split("-").pop())||1));
     const plainDesign=designNumber>=18;
     const accent=themeMap[d.pageTheme]||(plainDesign?"#222222":palette[designNumber-1]);
     if(d.watermarkEnabled&&clean(d.watermarkText,32)){const mark=()=>doc.save().fillColor(accent).opacity(.10).font("Times-Bold").fontSize(38).rotate(-32,{origin:[297,421]}).text(clean(d.watermarkText,32),55,390,{width:480,align:"center"}).restore();doc.on("pageAdded",mark);mark();}
