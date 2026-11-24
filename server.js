@@ -303,8 +303,8 @@ function makePdf(order, outputOverride = null, watermark = false) {
         .text(clean(d.subject || "APPLICATION FOR EMPLOYMENT"), { align: !plainDesign && layout === 2 ? "left" : plainDesign ? "left" : "center", underline: plainDesign || layout !== 2 });
       doc.moveDown(1.2);
       const letterBody = clean(d.body, 12000)
-        .replace(/^\\s*Dear\\s+(?:Hiring\\s+Manager|Sir\\/Madam|Mr\\.?|Mrs\\.?|Ms\\.?|[A-Z][^,\\n]{1,60})\\s*[,;:]?\\s*/i, "")
-        .replace(/\\s*(?:Yours faithfully|Yours sincerely|Kind regards|Best regards)[,;:]?\\s*(?:\\r?\\n\\s*[^\\r\\n]+)?\\s*$/i, "")
+        .replace(/^\s*Dear\s+(?:Hiring\s+Manager|Sir\/Madam|Mr\.?|Mrs\.?|Ms\.?|[A-Z][^,\n]{1,60})\s*[,;:]?\s*/i, "")
+        .replace(/\s*(?:Yours faithfully|Yours sincerely|Kind regards|Best regards)[,;:]?\s*(?:\r?\n\s*[^\r\n]+)?\s*$/i, "")
         .trim();
       if (letterBody) {
         doc.font("Times-Roman").fontSize(fontSize).fillColor("#111827")
