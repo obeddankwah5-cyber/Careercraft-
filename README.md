@@ -1,5 +1,11 @@
 # CareerCraft
 
+## Live website
+
+[Open CareerCraft](https://careercraft-sf7y.onrender.com)
+
+Live URL: https://careercraft-sf7y.onrender.com
+
 CareerCraft is a Ghana-focused document builder for CVs/resumes, application letters and tenancy agreement drafts. The web app includes a guided form, template choices, live preview, Paystack checkout and PDF delivery after server-side payment verification.
 
 ## Run locally
