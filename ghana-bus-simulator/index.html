@@ -439,6 +439,14 @@ const shellGeo=new THREE.ExtrudeGeometry(vanProfile,{depth:5.55,bevelEnabled:tru
 // Front and rear glass are separate panes, leaving a recognisable van nose and rear doors.
 const frontGlass=new THREE.Mesh(new THREE.PlaneGeometry(2.18,1.02),glass);frontGlass.position.set(0,2.53,2.795);frontGlass.rotation.x=-.12;bus.add(frontGlass);
 const rearGlass=new THREE.Mesh(new THREE.PlaneGeometry(2.05,.95),glass);rearGlass.position.set(0,2.48,-2.80);rearGlass.rotation.y=Math.PI;bus.add(rearGlass);
+ // Split rear cargo doors, vertical seam, handles and tall combination lamps.
+ box(bus,.035,1.65,.045,mat(0x879092),0,1.65,-2.835);
+ for(const x of [-.16,.16])box(bus,.055,.16,.055,mat(0x30383b),x,1.72,-2.88);
+ for(const x of [-1.08,1.08]){
+  box(bus,.25,.72,.07,mat(0xb52b24),x,1.65,-2.86);
+  box(bus,.25,.25,.075,mat(0xffa32c),x,1.35,-2.87);
+  box(bus,.25,.18,.075,mat(0xece8dc),x,1.12,-2.87);
+ }
 box(bus,2.55,.22,.2,mat(0x8d9698),0,.55,2.86);box(bus,2.55,.2,.2,mat(0x8d9698),0,.55,-2.86);
 // Exterior details: windscreen pillars, bumper, grille, mirrors, sliding door and route board.
 for(const x of [-1.43,-.72,0,.72,1.43])box(bus,.055,1.02,.07,dark,x,2.73,2.73);
@@ -503,15 +511,14 @@ function applyFleetSkin(name){
  while(fleetSkin.children.length){const child=fleetSkin.children.pop();fleetSkin.remove(child);}
  const style=fleetStyles[name];if(!style)return;
  const bodyMat=mat(style.colour),accentMat=mat(style.accent);
- // Lower side panels, front/rear fascia and roof band distinguish each fleet livery.
+ // Livery graphics only: never cover the shaped factory-white trotro shell with old box panels.
+ // Thin lower beltline stripe and compact fleet badges preserve the minibus silhouette.
  for(const side of [-1,1]){
-  box(fleetSkin,2.42,.48,.065,bodyMat,0,1.0,side*2.83);
-  box(fleetSkin,2.35,.09,.07,accentMat,0,1.36,side*2.87);
-  box(fleetSkin,.09,.35,.08,accentMat,side*1.36,1.38,side*3.29);
+  box(fleetSkin,2.35,.075,.035,accentMat,0,1.18,side*1.355);
+  box(fleetSkin,.08,.22,.04,accentMat,side*1.25,1.42,side*1.36);
  }
- box(fleetSkin,2.4,.42,.06,bodyMat,0,1.0,2.84);
- box(fleetSkin,2.4,.42,.06,bodyMat,0,1.0,-2.84);
- box(fleetSkin,2.35,.1,5.1,accentMat,0,3.12,0);
+ box(fleetSkin,2.25,.075,.035,accentMat,0,1.18,1.37);
+ box(fleetSkin,2.25,.075,.035,accentMat,0,1.18,-1.37);
  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.font='bold 100px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(style.mark,512,128);
  const tex=new THREE.CanvasTexture(canvas);
