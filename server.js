@@ -291,7 +291,7 @@ function makePdf(order, outputOverride = null, watermark = false) {
       if (applicationDate) {
         const parsedDate = new Date(applicationDate + "T12:00:00");
         const displayDate = Number.isNaN(parsedDate.getTime()) ? applicationDate : parsedDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-        doc.text(displayDate, { align: "left" });
+        doc.text(displayDate, { align: "right" });
       }
       doc.moveDown(1.2);
       const recipientAddress = [clean(d.recipientManager || "The HR Manager", 160), clean(d.recipientCompany, 200), clean(d.recipientPoBox, 100), clean(d.recipientLocation, 160)].filter(Boolean).join("\n");
