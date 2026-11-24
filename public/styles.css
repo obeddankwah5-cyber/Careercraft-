@@ -159,3 +159,11 @@
 }
 @keyframes introPenTravelMobile{0%{transform:translate(0,8px) rotate(-10deg)}100%{transform:translate(270px,8px) rotate(2deg)}}
 @media(prefers-reduced-motion:reduce){.intro-lettering text{animation:none!important;stroke-dashoffset:0;fill:#fff}.intro-writing-hand{display:none}}
+
+
+/* Final pen exit and ultra-crisp vector wordmark finish */
+.intro-word-writing{shape-rendering:geometricPrecision;text-rendering:geometricPrecision;overflow:visible}
+.intro-lettering text{paint-order:stroke fill;filter:drop-shadow(0 0 7px #d6aaff55)}
+.intro-writing-hand{animation-fill-mode:forwards}
+@keyframes introPenTravel{0%{transform:translate(0,8px) rotate(-10deg);opacity:1}96%{opacity:1}100%{transform:translate(350px,8px) rotate(2deg);opacity:0;visibility:hidden}}
+@keyframes introPenTravelMobile{0%{transform:translate(0,8px) rotate(-10deg);opacity:1}96%{opacity:1}100%{transform:translate(270px,8px) rotate(2deg);opacity:0;visibility:hidden}}
