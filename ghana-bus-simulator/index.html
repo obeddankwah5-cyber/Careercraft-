@@ -17,12 +17,25 @@
 .pedals{display:flex;gap:9px}.pedal{width:min(18vw,78px);height:105px;border:2px solid #ffffff55;border-radius:14px;background:linear-gradient(#34444d,#111b22);color:white;font-weight:800;box-shadow:0 5px 12px #0008}
 .pedal small{display:block;font-size:10px;font-weight:500}
 #gear{position:fixed;bottom:165px;right:12px;border-radius:10px;padding:8px;background:#07131ddd;color:white;border:1px solid #ffffff55}
-#talkPanel button{background:#d6a83f;color:#161616;border:0;border-radius:7px;padding:7px 10px;font-weight:700}\n#horn{position:fixed;bottom:165px;left:12px;border-radius:10px;padding:9px 13px;background:#07131ddd;color:white;border:1px solid #ffffff55}
+#talkPanel button{background:#d6a83f;color:#161616;border:0;border-radius:7px;padding:7px 10px;font-weight:700}
+#horn{position:fixed;bottom:165px;left:12px;border-radius:10px;padding:9px 13px;background:#07131ddd;color:white;border:1px solid #ffffff55}
 #hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#07131dcc;padding:12px 16px;border-radius:12px;text-align:center;font-size:13px;pointer-events:none}
 @media(orientation:landscape){#wheel{width:120px;height:120px}.pedal{height:88px}.controls{bottom:8px}#gear,#horn{bottom:112px}}
+
+#view canvas{width:100%;height:100%;display:block}
+#debugToggle{position:fixed;right:10px;bottom:10px;z-index:80;background:#142a37;color:#fff;border:1px solid #fff8;border-radius:9px;padding:8px 12px}
+#debugPanel{display:none;position:fixed;inset:8% 5%;z-index:90;background:#07131df2;border:1px solid #e2bd56;border-radius:14px;padding:14px;overflow:auto;font:13px system-ui}
+#debugLog{white-space:pre-wrap;overflow-wrap:anywhere;max-height:42vh;overflow:auto;background:#0008;padding:8px;border-radius:8px}
+#debugPanel button{padding:8px;margin:4px;background:#d6a83f;color:#111;border:0;border-radius:7px}
+#rotateNotice{display:none;position:fixed;inset:0;z-index:75;background:#08131fee;align-items:center;justify-content:center;text-align:center;padding:28px;font-weight:700;font-size:20px}
+@media(orientation:portrait){#rotateNotice{display:flex}}
+@media(orientation:landscape){.hud{top:6px;left:150px;right:150px;gap:5px}.panel{padding:5px 8px;font-size:10px}#stats{font-size:12px}#extraControls{top:58px!important;left:8px!important;max-height:calc(100vh - 180px);overflow-y:auto;max-width:118px}#extraControls button{font-size:9px;padding:4px 5px}#doors{top:58px!important;left:132px!important;font-size:10px;padding:5px!important}#lights{top:87px!important;left:132px!important;font-size:10px;padding:5px!important}#camera{top:58px;font-size:10px;padding:5px 7px}#missionBtn{top:88px!important;font-size:10px!important;padding:5px!important}#wheel{width:105px;height:105px;border-width:8px}.pedal{width:68px;height:76px;font-size:11px}.pedal small{font-size:9px}.controls{bottom:7px;left:8px;right:8px}#gear{bottom:90px;right:8px}#horn{bottom:90px;left:132px;font-size:10px;padding:5px 7px}#hint{top:44%;font-size:11px}}
 </style></head>
 <body>
 <div id="view"></div>
+<div id="rotateNotice">🇬🇭 GHANA BUS SIMULATOR<br><br>Please rotate your phone sideways to play in LANDSCAPE mode.</div>
+<button id="debugToggle" type="button">DEBUG</button>
+<div id="debugPanel"><b>GAME DIAGNOSTICS</b><div id="debugSummary" style="margin:10px 0;line-height:1.6"></div><pre id="debugLog">Waiting for game…</pre><button id="copyDebug">COPY REPORT</button><button id="testDebug">TEST LOG</button><button id="clearDebug">CLEAR LOG</button><button id="debugClose">CLOSE</button></div>
 <div class="hud"><div class="panel">🇬🇭 <b>GHANA BUS SIMULATOR</b><br>3D Cockpit Prototype</div><div class="panel" id="stats">0 km/h<br>Gear N</div><div class="panel" id="passengers">Passengers: 0<br>Fare: GH₵0.00</div><div class="panel" id="trafficStatus">Traffic: Active<br>Road rules: ON</div><div class="panel" id="roadStatus">Road: Normal</div></div>
 <button id="camera">CAMERA: CHASE</button>
 <button id="horn">HORN</button><div id="extraControls" style="position:fixed;top:164px;left:10px;display:flex;flex-direction:column;gap:5px;z-index:10"><button id="indicators">INDICATORS: OFF</button><button id="hazards">HAZARDS: OFF</button><button id="wipers">WIPERS: OFF</button><button id="weather">WEATHER: CLEAR</button><button id="mate">MATE: CALL</button>
@@ -74,15 +87,19 @@ function renderGbsDebug(){
  const all=[...gbsDebug.errors,...gbsDebug.warnings].slice(-35);
  l.textContent=all.length?all.map(x=>'['+x.time+'] '+x.kind+': '+x.message).join('\\n'):'No errors recorded.';
 }
-document.getElementById('debugToggle').onclick=()=>{document.getElementById('debugPanel').style.display='block';renderGbsDebug()};
-document.getElementById('debugClose').onclick=()=>document.getElementById('debugPanel').style.display='none';
-document.getElementById('clearDebug').onclick=()=>{gbsDebug.errors=[];gbsDebug.warnings=[];renderGbsDebug()};
-document.getElementById('testDebug').onclick=()=>{gbsLog('WARNING','This is a sample test entry. It is safe to clear.');};
-document.getElementById('copyDebug').onclick=async()=>{
+document.getElementById('debugToggle')?.addEventListener('click',()=>{document.getElementById('debugPanel').style.display='block';renderGbsDebug()});
+document.getElementById('debugClose')?.addEventListener('click',()=>document.getElementById('debugPanel').style.display='none');
+document.getElementById('clearDebug')?.addEventListener('click',()=>{gbsDebug.errors=[];gbsDebug.warnings=[];renderGbsDebug()});
+document.getElementById('testDebug')?.addEventListener('click',()=>{gbsLog('WARNING','This is a sample test entry. It is safe to clear.');});
+document.getElementById('copyDebug')?.addEventListener('click',async()=>{
  const report=['GHANA BUS SIMULATOR DEBUG REPORT','Build: V34 First Accra Mission + Diagnostics','Started: '+gbsDebug.started,'Browser: '+navigator.userAgent,'Screen: '+innerWidth+'x'+innerHeight,'Pixel ratio: '+devicePixelRatio,'Online: '+navigator.onLine,'FPS: '+gbsDebug.fps,'Errors: '+gbsDebug.errors.length,'Warnings: '+gbsDebug.warnings.length,'',...gbsDebug.errors.map(x=>'ERROR ['+x.time+'] '+x.message),...gbsDebug.warnings.map(x=>'WARNING ['+x.time+'] '+x.message)].join('\\n');
  try{await navigator.clipboard.writeText(report);document.getElementById('copyDebug').textContent='COPIED!';}
  catch(e){const ta=document.createElement('textarea');ta.value=report;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');document.getElementById('copyDebug').textContent='COPIED!';}catch(_){document.getElementById('debugLog').textContent=report;}ta.remove();}
-};
+});
+
+// Android browsers may permit landscape locking after the player's first touch.
+const requestLandscape=()=>{try{screen.orientation?.lock?.('landscape').catch(()=>{});}catch(_){}};
+addEventListener('pointerdown',requestLandscape,{once:true});
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const root=document.querySelector('#view'),scene=new THREE.Scene();scene.background=new THREE.Color(0x87b9d2);scene.fog=new THREE.Fog(0x87b9d2,90,380);
@@ -263,7 +280,7 @@ for(let i=0;i<7;i++){
 
 
 // V8 roadside road-safety zone and police checkpoint props
-function roadsideSign(x,z,label,colour=0x174c36){
+function roadsideSignLegacy(x,z,label,colour=0x174c36){
  const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
  box(group,.12,2.2,.12,dark,0,1.1,0);
  box(group,2.1,1.05,.12,mat(colour),0,2.25,0);
@@ -273,8 +290,8 @@ function roadsideSign(x,z,label,colour=0x174c36){
  const tex=new THREE.CanvasTexture(canvas);const face=new THREE.Mesh(new THREE.PlaneGeometry(1.95,.9),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
  face.position.set(0,2.25,.071);group.add(face);return group;
 }
-roadsideSign(-8,-48,'SPEED LIMIT|50 km/h',0x174c36);
-roadsideSign(8,-198,'POLICE|CHECKPOINT',0x173d70);
+roadsideSignLegacy(-8,-48,'SPEED LIMIT|50 km/h',0x174c36);
+roadsideSignLegacy(8,-198,'POLICE|CHECKPOINT',0x173d70);
 // Simple police checkpoint: parked patrol pickup, cones and a barrier across the shoulder
 const policeCar=new THREE.Group();policeCar.position.set(5.6,.05,-218);scene.add(policeCar);
 box(policeCar,2,.8,4,mat(0xe8e9e8),0,.75,0);
@@ -621,7 +638,8 @@ let doorsOpen=false, lightsOn=false, passengerCount=0, fareTotal=0, onboard=[];
 let companyCash=5000,companyBuses=1,companyDrivers=0,companyRouteName='Accra Central – Madina';
 function refreshCompany(){const el=document.getElementById('companyStats');if(el)el.innerHTML='Cash: GH₵'+companyCash.toFixed(2)+'<br>Fleet: '+companyBuses+' bus(es)<br>Drivers: '+companyDrivers+'<br>Route: '+companyRouteName+'<br>Passenger revenue: GH₵'+fareTotal.toFixed(2);}
 
-let currentFare=5,mateMessage='Mate is ready. Pull up at a station.',destinationMode=0;\nlet storedLuggage=[];const luggageRack=new THREE.Group();bus.add(luggageRack);luggageRack.position.set(0,.15,-2.15);
+let currentFare=5,mateMessage='Mate is ready. Pull up at a station.',destinationMode=0;
+let storedLuggage=[];const luggageRack=new THREE.Group();bus.add(luggageRack);luggageRack.position.set(0,.15,-2.15);
 showMateMessage(mateMessage);
 
 function showMateMessage(message){
@@ -757,7 +775,8 @@ document.getElementById('doors').onclick=()=>{
    document.getElementById('doors').textContent=(leaving.length?'OFF -'+leaving.length+' ':'')+(boarded?'ON +'+boarded:'STOP SERVICED');
   }else{document.getElementById('doors').textContent='NO STOP NEARBY'}
  }
-}document.getElementById('lights').onclick=()=>{lightsOn=!lightsOn;document.getElementById('lights').textContent='LIGHTS: '+(lightsOn?'ON':'OFF')};
+}
+document.getElementById('lights').onclick=()=>{lightsOn=!lightsOn;document.getElementById('lights').textContent='LIGHTS: '+(lightsOn?'ON':'OFF')};
 document.getElementById('lights').onclick=()=>{
  lightsOn=!lightsOn;lightMode=lightsOn?'LOW':'OFF';
  document.getElementById('lights').textContent='LIGHTS: '+lightMode;
@@ -794,7 +813,8 @@ document.getElementById('luggage').onclick=()=>{
  document.getElementById('luggage').textContent='LUGGAGE: '+count+'/8';
  showMateMessage(count?'Mate: '+count+' bag(s) safely stored in the luggage rack.':'Mate: The luggage rack is empty.');
 };
-\n// V27: mate fare collection and passenger payment status.
+
+// V27: mate fare collection and passenger payment status.
 let lastFareReceipt='No fares collected yet.';
 function collectPassengerFares(){
  const unpaid=onboard.filter(p=>!p.paid);
@@ -887,7 +907,8 @@ document.getElementById('repair').onclick=()=>{
  showMateMessage('Mechanic: Repairs complete. GH₵'+cost+' paid. Safe journey!');
 };
 document.getElementById('damage').onclick=()=>showMateMessage(repairMessage);
-\n// V30: roadside fuel station and fuel economy.
+
+// V30: roadside fuel station and fuel economy.
 let fuelLevel=100,fuelStationZ=-145,fuelLitresAdded=0;
 const stationGroup=new THREE.Group();
 const stationSign=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.1,.18),mat(0xf0cf35));stationSign.position.set(6.4,2.8,fuelStationZ);scene.add(stationSign);
@@ -911,7 +932,8 @@ document.getElementById('refuel').onclick=()=>{
  companyCash-=cost;fuelLitresAdded+=needed*.8;fuelLevel=100;refreshCompany();updateFuelHud();
  showMateMessage('Fuel attendant: Tank full. GH₵'+cost+' paid. Safe journey!');
 };
-\n// V33 first structured route contract: Accra Central to Kaneshie.
+
+// V33 first structured route contract: Accra Central to Kaneshie.
 let routeMissionActive=false,routeMissionStage=0,routeMissionDone=false;
 const missionStatus=document.getElementById('missionStatus');
 document.getElementById('missionBtn').onclick=()=>{document.getElementById('missionPanel').style.display='block';};
@@ -1024,7 +1046,8 @@ for(const hazard of roadHazards){
  }
 }
 if(breakdown){throttle=0;speed=0;}
-distance+=Math.abs(speed)*dt/3600;\nif(Math.abs(speed)>.5 && !breakdown){fuelLevel=Math.max(0,fuelLevel-Math.abs(speed)*dt*.00042);updateFuelHud();if(fuelLevel<=0){speed=0;throttle=0;showMateMessage('Fuel empty! Find a fuel station.');}}
+distance+=Math.abs(speed)*dt/3600;
+if(Math.abs(speed)>.5 && !breakdown){fuelLevel=Math.max(0,fuelLevel-Math.abs(speed)*dt*.00042);updateFuelHud();if(fuelLevel<=0){speed=0;throttle=0;showMateMessage('Fuel empty! Find a fuel station.');}}
  speedNeedle.rotation.z=-THREE.MathUtils.clamp(Math.abs(speed)/105,0,1)*2.1-.25;rpmNeedle.rotation.z=-THREE.MathUtils.clamp(Math.abs(speed)/105,0,1)*2.35-.25;
 // Traffic vehicles roll along the road; oncoming traffic travels toward the player.
  for(const car of trafficCars){
@@ -1124,6 +1147,6 @@ renderer.render(scene,camera);
 gbsDebug.frames++;const now=performance.now();if(now-gbsDebug.lastFpsAt>=1000){gbsDebug.fps=Math.round(gbsDebug.frames*1000/(now-gbsDebug.lastFpsAt));gbsDebug.frames=0;gbsDebug.lastFpsAt=now;}
 }
 animate();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));});
 setTimeout(()=>document.getElementById('hint').style.display='none',6500);
 </script></body></html>
