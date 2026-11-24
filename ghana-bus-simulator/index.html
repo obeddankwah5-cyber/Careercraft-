@@ -104,7 +104,7 @@ addEventListener('pointerdown',requestLandscape,{once:true});
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const root=document.querySelector('#view'),scene=new THREE.Scene();scene.background=new THREE.Color(0x87b9d2);scene.fog=new THREE.Fog(0x87b9d2,90,380);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;root.appendChild(renderer.domElement);
+let renderer;try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;root.appendChild(renderer.domElement);}catch(err){const fail=document.createElement('div');fail.style.cssText='position:fixed;inset:0;z-index:999;background:#101820;color:white;padding:24px;font:16px system-ui';fail.innerHTML='<h2>3D graphics could not start</h2><p>Open this game in Chrome, enable hardware acceleration if available, and reload.</p><pre style="white-space:pre-wrap"></pre>';fail.querySelector('pre').textContent=String(err);document.body.appendChild(fail);throw err;}
 const hemi=new THREE.HemisphereLight(0xd9efff,0x5b503c,2.0);scene.add(hemi);const sun=new THREE.DirectionalLight(0xfff0d2,2.2);sun.position.set(-35,70,25);sun.castShadow=true;scene.add(sun);
 const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
 const asphalt=mat(0x42494b),sand=mat(0xc8b17b),grass=mat(0x557c43),yellow=mat(0xe6bd20),dark=mat(0x18242b),glass= new THREE.MeshStandardMaterial({color:0x294c5b,metalness:.15,roughness:.22});
@@ -433,7 +433,7 @@ const alightingAnimations=[];
 const bus=new THREE.Group();scene.add(bus);
 function box(parent,w,h,d,material,x,y,z){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 box(bus,3.1,2.65,6.4,yellow,0,1.65,0);box(bus,2.85,1.05,5.8,glass,0,2.65,-.1);box(bus,2.9,.38,1.0,dark,0,3.0,2.85);box(bus,2.9,.3,.9,dark,0,.55,-2.8);
-for(let z of [-2,-.65,.7,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,.28,18),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;bus.add(tire)}
+const busWheels=[];for(let z of [-2,-.65,.7,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,.28,18),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire)}
 for(let z of [-2.7,2.7])for(let x of [-.95,.95])box(bus,.45,.22,.08,mat(0xffe4a0),x,1.35,z);
 box(bus,1.4,.35,.08,mat(0xffffff),0,1.1,3.23);
 const interior=new THREE.Group();bus.add(interior);
@@ -633,6 +633,36 @@ function release(){drag=false}wheel.addEventListener('pointerup',release);wheel.
 function hold(id,set){let el=document.getElementById(id);el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);set(1)});['pointerup','pointercancel','pointerleave'].forEach(t=>el.addEventListener(t,()=>set(0)))}
 hold('gas',v=>throttle=v);hold('brake',v=>braking=v);
 document.getElementById('gear').onchange=e=>gear=e.target.value;
+
+// V37: mobile-friendly generated engine audio and horn. Audio starts only after a user gesture.
+let gameAudio=null,engineOsc=null,engineGain=null,engineFilter=null,hornOsc=null,hornGain=null;
+function startGameAudio(){
+ if(gameAudio)return;
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ gameAudio=new AC();engineOsc=gameAudio.createOscillator();engineOsc.type='sawtooth';
+ engineFilter=gameAudio.createBiquadFilter();engineFilter.type='lowpass';engineFilter.frequency.value=420;
+ engineGain=gameAudio.createGain();engineGain.gain.value=.0001;
+ engineOsc.connect(engineFilter);engineFilter.connect(engineGain);engineGain.connect(gameAudio.destination);engineOsc.start();
+}
+addEventListener('pointerdown',()=>{startGameAudio();if(gameAudio?.state==='suspended')gameAudio.resume();},{once:true});
+function updateEngineAudio(){
+ if(!gameAudio||!engineOsc)return;
+ const rpm=75+Math.abs(speed)*8+throttle*48;
+ engineOsc.frequency.setTargetAtTime(rpm,gameAudio.currentTime,.08);
+ engineFilter.frequency.setTargetAtTime(260+throttle*900+Math.abs(speed)*13,gameAudio.currentTime,.1);
+ engineGain.gain.setTargetAtTime(.018+throttle*.035+Math.min(Math.abs(speed)/180,.012),gameAudio.currentTime,.12);
+}
+function playHorn(){
+ startGameAudio();if(!gameAudio)return;
+ if(gameAudio.state==='suspended')gameAudio.resume();
+ const osc=gameAudio.createOscillator(),gain=gameAudio.createGain();
+ osc.type='square';osc.frequency.value=390;gain.gain.setValueAtTime(.0001,gameAudio.currentTime);
+ gain.gain.exponentialRampToValueAtTime(.12,gameAudio.currentTime+.035);
+ gain.gain.setTargetAtTime(.0001,gameAudio.currentTime+.38,.08);
+ osc.connect(gain);gain.connect(gameAudio.destination);osc.start();osc.stop(gameAudio.currentTime+.75);
+}
+document.getElementById('horn').addEventListener('click',playHorn);
+
 document.getElementById('camera').onclick=()=>{camIndex=(camIndex+1)%cams.length;document.getElementById('camera').textContent='CAMERA: '+cams[camIndex]};
 let doorsOpen=false, lightsOn=false, passengerCount=0, fareTotal=0, onboard=[];
 let companyCash=5000,companyBuses=1,companyDrivers=0,companyRouteName='Accra Central – Madina';
@@ -1032,7 +1062,7 @@ if(weatherMode==='RAIN'||weatherMode==='STORM'){
  }
 let drive=gear==='R'?-1:gear==='N'?0:1;let ratio=gear==='1'?1:gear==='2'?.75:gear==='3'?.58:gear==='4'?.45:gear==='R'?.55:0;
 speed=THREE.MathUtils.clamp(speed+(throttle*drive*ratio*13*vehicleTune.accel-braking*28*vehicleTune.brake-(throttle?0:2))*dt,-18,vehicleTune.max);
-bus.rotation.y+=steer*speed*.0017*vehicleTune.handling*dt*60;bus.position.z-=speed*dt*.24;bus.position.x+=Math.sin(bus.rotation.y)*Math.abs(speed)*dt*.08;bus.position.x=THREE.MathUtils.clamp(bus.position.x,-5,5);
+bus.rotation.y+=steer*speed*.0017*vehicleTune.handling*dt*60;bus.position.z-=speed*dt*.24;bus.position.x+=Math.sin(bus.rotation.y)*Math.abs(speed)*dt*.08;bus.position.x=THREE.MathUtils.clamp(bus.position.x,-5,5);for(const tire of busWheels)tire.rotation.x-=speed*dt*.22;updateEngineAudio();
 for(const hazard of roadHazards){
  if(!hazard.hit && Math.abs(bus.position.z-hazard.z)<1.15 && Math.abs(bus.position.x-hazard.x)<1.25){
   hazard.hit=true;
@@ -1147,6 +1177,7 @@ renderer.render(scene,camera);
 gbsDebug.frames++;const now=performance.now();if(now-gbsDebug.lastFpsAt>=1000){gbsDebug.fps=Math.round(gbsDebug.frames*1000/(now-gbsDebug.lastFpsAt));gbsDebug.frames=0;gbsDebug.lastFpsAt=now;}
 }
 animate();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));});
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();gbsLog('ERROR','WebGL graphics context lost. Close other tabs and reload the game.');});
 setTimeout(()=>document.getElementById('hint').style.display='none',6500);
 </script></body></html>
