@@ -82,3 +82,5 @@
  .hero-proof span{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){.hero-video{display:none}}
+
+.brand-light .brand-icon{background:linear-gradient(135deg,#5126b9,#8748e8 55%,#d36be7)}
