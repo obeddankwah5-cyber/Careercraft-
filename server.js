@@ -307,13 +307,11 @@ function makePdf(order, outputOverride = null, watermark = false) {
         drawCvSection(doc, "PROFILE", clean(d.summary, 6000), accent, false, fontSize, headingSize);
         const personal = [["Date of Birth", d.dateOfBirth], ["Place of Birth", d.placeOfBirth], ["Nationality", d.nationality], ["Language", d.language], ["Marital Status", d.maritalStatus], ["Contact", d.personalContact || d.phone]].filter(([,v]) => String(v || "").trim()).map(([k,v]) => k + ": " + v).join("\n");
         drawCvSection(doc, "PERSONAL INFORMATION", personal, accent, false, fontSize, headingSize);
-        drawCvSection(doc, "SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
-        drawCvSection(doc, "INTEREST AND HOBBIES", clean(d.interests, 3000), accent, true, fontSize, headingSize);
         drawCvTable(doc, "EDUCATION BACKGROUND", clean(d.education, 6000), "education", fontSize, headingSize);
         drawCvTable(doc, "WORKING EXPERIENCE", clean(d.experience, 6000), "experience", fontSize, headingSize);
-        drawCvTable(doc, "EDUCATION", clean(d.education, 6000), "education", fontSize, headingSize);
+        drawCvSection(doc, "SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
+        drawCvSection(doc, "INTEREST AND HOBBIES", clean(d.interests, 3000), accent, true, fontSize, headingSize);
         drawCvSection(doc, "REFERENCE", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
-        drawCvSection(doc, "ADDITIONAL DETAILS", clean(d.extra, 6000), accent, false, fontSize, headingSize);
       } else {
         sections.forEach(([heading, value]) => {
           if (value) {
@@ -387,7 +385,7 @@ app.post("/api/payments/initialize", async (req, res) => {
     const order = { reference, token, status: "pending", createdAt: new Date().toISOString(), data: {
       documentType: clean(data.documentType, 20), template: clean(data.template, 40),
       fullName: clean(data.fullName || data.name, 100), email, phone: clean(data.phone, 40),
-      location: clean(data.location, 120), targetRole: clean(data.targetRole, 120), pageTheme: clean(data.pageTheme,20), fontSize: Number(data.fontSize)||12, headingSize: Number(data.headingSize)||14, watermarkEnabled: data.watermarkEnabled===true, watermarkText: clean(data.watermarkText,32),
+      location: clean(data.location, 120), targetRole: clean(data.targetRole, 120), dateOfBirth: clean(data.dateOfBirth, 40), placeOfBirth: clean(data.placeOfBirth, 120), nationality: clean(data.nationality, 80), language: clean(data.language, 120), maritalStatus: clean(data.maritalStatus, 60), personalContact: clean(data.personalContact, 60), interests: clean(data.interests, 3000), pageTheme: clean(data.pageTheme,20), fontSize: Number(data.fontSize)||12, headingSize: Number(data.headingSize)||14, watermarkEnabled: data.watermarkEnabled===true, watermarkText: clean(data.watermarkText,32),
       references: clean(data.references, 1000), summary: clean(data.summary), experience: clean(data.experience),
       education: clean(data.education), skills: clean(data.skills), extra: clean(data.extra),
       recipient: clean(data.recipient), subject: clean(data.subject), body: clean(data.body, 12000),
