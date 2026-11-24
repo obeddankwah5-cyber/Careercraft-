@@ -58,3 +58,27 @@
 @keyframes buttonShine{0%,70%{left:-45%;opacity:0}78%{opacity:1}100%{left:130%;opacity:0}}
 @media(max-width:700px){.site-header{height:72px;padding:0 5%}.brand-icon{width:41px;height:41px}.brand{font-size:18px}.main-nav{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}}
 @media(prefers-reduced-motion:reduce){.brand-icon,.brand-icon:after,.brand-spark,.hero,.orbit-one,.orbit-two,.btn-primary:after{animation:none!important}.service-card,.service-photo,.gallery-paper,.brand{transition:none!important}}
+
+
+/* CareerCraft brand refresh + cinematic hero video */
+.brand-icon,.intro-mark{display:grid;place-items:center}
+.brand-icon svg{width:31px;height:31px;display:block}
+.intro-mark svg{width:49px;height:49px;display:block}
+.brand-icon{background:linear-gradient(135deg,#5126b9 0%,#8748e8 55%,#d36be7 100%)}
+.brand-icon:after{border-color:#a879ef85}
+.brand-name small,.intro-tagline{letter-spacing:1.65px}
+.hero{isolation:isolate;background:#21143d}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.48;filter:saturate(.78)}
+.hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(255,250,246,.97) 0%,rgba(250,246,255,.91) 48%,rgba(34,20,61,.42) 100%),linear-gradient(0deg,rgba(255,255,255,.22),rgba(255,255,255,.22))}
+.hero-content,.hero-stage{position:relative;z-index:1}
+.hero h1{max-width:690px}
+.hero-proof span{background:#ffffffb8;border:1px solid #ffffffaa;border-radius:30px;padding:8px 10px}
+.intro-mark{background:linear-gradient(140deg,#5126b9,#8748e8 55%,#d36be7)!important}
+.intro-mark svg{filter:drop-shadow(0 2px 4px #26134455)}
+@media(max-width:700px){
+ .hero-video{opacity:.24}
+ .hero:before{background:linear-gradient(180deg,rgba(255,250,246,.95),rgba(250,246,255,.92))}
+ .hero-proof{gap:7px}
+ .hero-proof span{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.hero-video{display:none}}
