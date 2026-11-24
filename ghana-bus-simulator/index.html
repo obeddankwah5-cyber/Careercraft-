@@ -432,7 +432,14 @@ const alightingAnimations=[];
 // Bus body
 const bus=new THREE.Group();scene.add(bus);
 function box(parent,w,h,d,material,x,y,z){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
-box(bus,3.18,2.5,6.35,yellow,0,1.62,0);box(bus,2.98,1.12,5.65,glass,0,2.72,-.12);box(bus,3.02,.3,1.05,dark,0,2.98,2.82);box(bus,3.02,.26,.92,dark,0,.53,-2.82);
+// Ghana high-roof minibus shell: rounded panel van proportions, not a box-shaped coach.
+const trotroWhite=new THREE.MeshStandardMaterial({color:0xf0f0e9,roughness:.48,metalness:.08});
+const vanProfile=new THREE.Shape();vanProfile.moveTo(-1.27,.58);vanProfile.lineTo(1.27,.58);vanProfile.quadraticCurveTo(1.34,.62,1.34,.78);vanProfile.lineTo(1.34,2.78);vanProfile.quadraticCurveTo(1.34,3.02,1.12,3.08);vanProfile.quadraticCurveTo(0,3.22,-1.12,3.08);vanProfile.quadraticCurveTo(-1.34,3.02,-1.34,2.78);vanProfile.lineTo(-1.34,.78);vanProfile.quadraticCurveTo(-1.34,.62,-1.27,.58);
+const shellGeo=new THREE.ExtrudeGeometry(vanProfile,{depth:5.55,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.075,bevelThickness:.07,curveSegments:10});shellGeo.translate(0,0,-2.775);const shell=new THREE.Mesh(shellGeo,trotroWhite);shell.castShadow=true;shell.receiveShadow=true;bus.add(shell);
+// Front and rear glass are separate panes, leaving a recognisable van nose and rear doors.
+const frontGlass=new THREE.Mesh(new THREE.PlaneGeometry(2.18,1.02),glass);frontGlass.position.set(0,2.53,2.795);frontGlass.rotation.x=-.12;bus.add(frontGlass);
+const rearGlass=new THREE.Mesh(new THREE.PlaneGeometry(2.05,.95),glass);rearGlass.position.set(0,2.48,-2.80);rearGlass.rotation.y=Math.PI;bus.add(rearGlass);
+box(bus,2.55,.22,.2,mat(0x8d9698),0,.55,2.86);box(bus,2.55,.2,.2,mat(0x8d9698),0,.55,-2.86);
 // Exterior details: windscreen pillars, bumper, grille, mirrors, sliding door and route board.
 for(const x of [-1.43,-.72,0,.72,1.43])box(bus,.055,1.02,.07,dark,x,2.73,2.73);
 box(bus,2.95,.22,.22,mat(0x30383b),0,.53,3.18);box(bus,1.15,.52,.08,mat(0x252c30),0,1.12,3.22);
@@ -441,14 +448,14 @@ box(bus,1.5,.36,.08,mat(0xf2d45a),0,3.18,2.68);
 for(const x of [-1.7,1.7]){let arm=box(bus,.09,.08,.72,dark,x,2.58,2.2);arm.rotation.x=-.15;box(bus,.34,.28,.16,glass,x*1.04,2.56,1.92);}
 for(const side of [-1,1]){
  // Proper side glazing, pillars and sliding passenger door details.
- for(const z of [-1.75,-.55,.68,1.82]){let pane=new THREE.Mesh(new THREE.BoxGeometry(.045,.72,.88),new THREE.MeshStandardMaterial({color:0x173846,metalness:.18,roughness:.18,transparent:true,opacity:.92}));pane.position.set(side*1.605,2.58,z);bus.add(pane);box(bus,.055,.055,.96,dark,side*1.64,2.99,z);box(bus,.055,.055,.96,dark,side*1.64,2.17,z);}
- for(const z of [-2.2,-1.1,.1,1.25,2.35])box(bus,.07,.94,.055,mat(0x3d4548),side*1.65,2.58,z);
+ for(const z of [-1.75,-.55,.68,1.82]){let pane=new THREE.Mesh(new THREE.BoxGeometry(.045,.72,.88),new THREE.MeshStandardMaterial({color:0x173846,metalness:.18,roughness:.18,transparent:true,opacity:.92}));pane.position.set(side*1.345,2.55,z);bus.add(pane);box(bus,.055,.055,.96,dark,side*1.37,2.94,z);box(bus,.055,.055,.96,dark,side*1.37,2.12,z);}
+ for(const z of [-2.2,-1.1,.1,1.25,2.35])box(bus,.07,.94,.055,mat(0x3d4548),side*1.39,2.55,z);
  // Sliding door seam and handle
- box(bus,.035,1.72,.045,mat(0x3b4143),side*1.66,1.72,.95);box(bus,.045,.12,.08,mat(0xbfc5c4),side*1.69,1.8,1.25);
+ box(bus,.035,1.72,.045,mat(0x3b4143),side*1.39,1.72,.95);box(bus,.045,.12,.08,mat(0xbfc5c4),side*1.42,1.8,1.25);
 }
 // Front lamps, indicator lenses and a more substantial bumper.
 for(const x of [-1.08,1.08]){box(bus,.42,.22,.08,mat(0xfff0bf),x,1.43,3.22);box(bus,.18,.12,.08,mat(0xff8b22),x*1.38,1.42,3.22);}
-const busWheels=[];for(let z of [-2.05,2.05])for(let x of [-1.57,1.57]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.57,.57,.34,24),dark);tire.rotation.z=Math.PI/2;tire.position.set(x,.62,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire);let hub=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.355,20),mat(0x9aa2a4,.35));hub.rotation.z=Math.PI/2;hub.position.set(x*1.006,.62,z);bus.add(hub)}
+const busWheels=[];for(let z of [-1.82,1.82])for(let x of [-1.29,1.29]){let tire=new THREE.Mesh(new THREE.CylinderGeometry(.43,.43,.28,28),mat(0x171b1e));tire.rotation.z=Math.PI/2;tire.position.set(x,.55,z);tire.castShadow=true;bus.add(tire);busWheels.push(tire);let hub=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.30,24),mat(0xaeb5b5,.32));hub.rotation.z=Math.PI/2;hub.position.set(x*1.006,.55,z);bus.add(hub)}
 for(let z of [-2.7,2.7])for(let x of [-.95,.95])box(bus,.45,.22,.08,mat(0xffe4a0),x,1.35,z);
 box(bus,1.4,.35,.08,mat(0xffffff),0,1.1,3.23);
 const interior=new THREE.Group();bus.add(interior);
@@ -487,7 +494,7 @@ let selectedBusModel='TROTRO';
 let vehicleTune={accel:1.18,max:82,handling:1.12,brake:1.05};
 let fleetSkin=new THREE.Group();bus.add(fleetSkin);
 const fleetStyles={
- 'TROTRO':{cost:0,colour:0xe9b82c,accent:0x18232a,mark:'TROTRO',accel:1.18,max:82,handling:1.12,brake:1.05,seat:0x4c4134,dash:0x252b30},
+ 'TROTRO':{cost:0,colour:0xf0f0e9,accent:0xe1a52b,mark:'GHANA TROTRO',accel:1.08,max:78,handling:1.0,brake:1.12,seat:0x4c4134,dash:0x252b30},
  'VIP':{cost:800,colour:0x183b75,accent:0xe8e8ed,mark:'VIP EXPRESS',accel:.88,max:105,handling:.82,brake:1.12,seat:0x293b52,dash:0x18232f},
  'STC':{cost:1200,colour:0xd6dce2,accent:0x173f79,mark:'STC',accel:.82,max:98,handling:.78,brake:1.18,seat:0x31455a,dash:0x1a252d},
  '2M EXPRESS':{cost:1000,colour:0x176b49,accent:0xf1d34a,mark:'2M EXPRESS',accel:.96,max:102,handling:.88,brake:1.1,seat:0x3d332b,dash:0x202b2a}
@@ -498,13 +505,13 @@ function applyFleetSkin(name){
  const bodyMat=mat(style.colour),accentMat=mat(style.accent);
  // Lower side panels, front/rear fascia and roof band distinguish each fleet livery.
  for(const side of [-1,1]){
-  box(fleetSkin,2.82,1.05,.07,bodyMat,0,1.45,side*3.235);
-  box(fleetSkin,2.86,.17,.075,accentMat,0,2.08,side*3.28);
+  box(fleetSkin,2.42,.48,.065,bodyMat,0,1.0,side*2.83);
+  box(fleetSkin,2.35,.09,.07,accentMat,0,1.36,side*2.87);
   box(fleetSkin,.09,.35,.08,accentMat,side*1.36,1.38,side*3.29);
  }
- box(fleetSkin,2.88,.7,.07,bodyMat,0,1.45,3.245);
- box(fleetSkin,2.88,.7,.07,bodyMat,0,1.45,-3.245);
- box(fleetSkin,2.9,.12,5.9,accentMat,0,3.03,0);
+ box(fleetSkin,2.4,.42,.06,bodyMat,0,1.0,2.84);
+ box(fleetSkin,2.4,.42,.06,bodyMat,0,1.0,-2.84);
+ box(fleetSkin,2.35,.1,5.1,accentMat,0,3.12,0);
  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.font='bold 100px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(style.mark,512,128);
  const tex=new THREE.CanvasTexture(canvas);
