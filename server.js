@@ -255,9 +255,11 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const accent=themeMap[d.pageTheme]||(plainDesign?"#222222":palette[designNumber-1]);
     if(d.watermarkEnabled&&clean(d.watermarkText,32)){const mark=()=>doc.save().fillColor(accent).opacity(.10).font("Times-Bold").fontSize(38).rotate(-32,{origin:[297,421]}).text(clean(d.watermarkText,32),55,390,{width:480,align:"center"}).restore();doc.on("pageAdded",mark);mark();}
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
+    const samplePhoto = watermark && d.documentType === "cv" && !photoMatch;
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
+    else if(samplePhoto){doc.save();doc.circle(494,87,39).fill("#e8eaf2");doc.circle(494,75,14).fill("#8b91a8");doc.roundedRect(469,91,50,27,14).fill("#8b91a8");doc.restore();}
     if (d.documentType !== "letter" && d.documentType !== "tenancy") {
-      doc.font("Times-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:photoMatch?365:480});
+      doc.font("Times-Bold").fontSize(20).fillColor(plainDesign?"#222222":accent).text(clean(d.fullName || d.name || "Your Document", 100),{width:(photoMatch||samplePhoto)?365:480});
       doc.moveDown(0.35);
       if (d.email || d.phone || d.location) {
         doc.font("Times-Roman").fontSize(9).fillColor("#475569").text([d.email, d.phone, d.location].filter(Boolean).join("  |  "));
@@ -318,13 +320,18 @@ function makePdf(order, outputOverride = null, watermark = false) {
       drawTenancyAgreement(doc,d,accent,fontSize,headingSize);
     } else {
       if (d.documentType === "cv") {
-        drawCvSection(doc, "PROFILE", clean(d.summary, 6000), accent, false, fontSize, headingSize);
-        const personal = [["Date of Birth", d.dateOfBirth], ["Place of Birth", d.placeOfBirth], ["Nationality", d.nationality], ["Language", d.language], ["Marital Status", d.maritalStatus], ["Contact", d.personalContact || d.phone]].filter(([,v]) => String(v || "").trim()).map(([k,v]) => k + ": " + v).join("\n");
+        const previewProfile = watermark ? "A motivated and organised professional with a positive attitude, clear communication skills and a strong willingness to learn. Ready to contribute effectively while continuing to develop practical experience." : "";
+        const previewPersonal = watermark ? "Date of Birth: 15 March 2001\nPlace of Birth: Accra, Ghana\nNationality: Ghanaian\nLanguage: English\nMarital Status: Single\nContact: +233 20 000 0000" : "";
+        const previewEducation = watermark ? "Sample Senior High School | WASSCE | 2022" : "";
+        const previewExperience = watermark ? "Sample Company | Administrative Assistant | 2023–2025" : "";
+        const previewInterests = watermark ? "Reading\nLearning new skills\nTeam activities" : "";
+        drawCvSection(doc, "PROFILE", clean(d.summary, 6000) || previewProfile, accent, false, fontSize, headingSize);
+        const personal = [["Date of Birth", d.dateOfBirth], ["Place of Birth", d.placeOfBirth], ["Nationality", d.nationality], ["Language", d.language], ["Marital Status", d.maritalStatus], ["Contact", d.personalContact || d.phone]].filter(([,v]) => String(v || "").trim()).map(([k,v]) => k + ": " + v).join("\n") || previewPersonal;
         drawCvSection(doc, "PERSONAL INFORMATION", personal, accent, false, fontSize, headingSize);
-        drawCvTable(doc, "EDUCATION BACKGROUND", clean(d.education, 6000), "education", fontSize, headingSize);
-        drawCvTable(doc, "WORKING EXPERIENCE", clean(d.experience, 6000), "experience", fontSize, headingSize);
+        drawCvTable(doc, "EDUCATION BACKGROUND", clean(d.education, 6000) || previewEducation, "education", fontSize, headingSize);
+        drawCvTable(doc, "WORKING EXPERIENCE", clean(d.experience, 6000) || previewExperience, "experience", fontSize, headingSize);
         drawCvSection(doc, "SKILLS", clean(d.skills || suggestedSkills(d.targetRole).join("\n"), 6000), accent, true, fontSize, headingSize);
-        drawCvSection(doc, "INTEREST AND HOBBIES", clean(d.interests, 3000), accent, true, fontSize, headingSize);
+        drawCvSection(doc, "INTEREST AND HOBBIES", clean(d.interests, 3000) || previewInterests, accent, true, fontSize, headingSize);
         drawCvSection(doc, "REFERENCE", clean(d.references || "Available upon request", 1000), accent, false, fontSize, headingSize);
       } else {
         sections.forEach(([heading, value]) => {
