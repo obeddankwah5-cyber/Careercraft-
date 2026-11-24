@@ -167,3 +167,9 @@
 .intro-writing-hand{animation-fill-mode:forwards}
 @keyframes introPenTravel{0%{transform:translate(0,8px) rotate(-10deg);opacity:1}96%{opacity:1}100%{transform:translate(350px,8px) rotate(2deg);opacity:0;visibility:hidden}}
 @keyframes introPenTravelMobile{0%{transform:translate(0,8px) rotate(-10deg);opacity:1}96%{opacity:1}100%{transform:translate(270px,8px) rotate(2deg);opacity:0;visibility:hidden}}
+
+
+/* Creator credit below the CareerCraft footer */
+.site-footer .footer-credit{display:block;flex:0 0 100%;width:100%;text-align:center;margin-top:14px;padding-top:13px;border-top:1px solid #ffffff20;color:#a99abd;font:700 9px/1.5 "DM Sans",sans-serif;letter-spacing:2px}
+.site-footer .footer-credit strong{color:#d6a4ff;font-weight:800;letter-spacing:2.5px}
+@media(max-width:600px){.site-footer .footer-credit{font-size:8px;letter-spacing:1.5px;margin-top:12px}}
