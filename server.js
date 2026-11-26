@@ -253,7 +253,23 @@ function makePdf(order, outputOverride = null, watermark = false) {
     const designNumber=Math.max(1,Math.min(30,Number(String(d.template||"").split("-").pop())||1));
     const plainDesign=designNumber>=28;
     const accent=themeMap[d.pageTheme]||(plainDesign?"#222222":palette[designNumber-1]);
-    if(d.watermarkEnabled&&clean(d.watermarkText,32)){const mark=()=>doc.save().fillColor(accent).opacity(.10).font("Times-Bold").fontSize(38).rotate(-32,{origin:[297,421]}).text(clean(d.watermarkText,32),55,390,{width:480,align:"center"}).restore();doc.on("pageAdded",mark);mark();}
+    if (d.watermarkEnabled && clean(d.watermarkText, 32)) {
+      const mark = () => {
+        // Watermarks are decorative overlays: preserve the text cursor so they
+        // cannot add vertical space or shift the document content.
+        const savedX = doc.x;
+        const savedY = doc.y;
+        doc.save();
+        doc.fillColor(accent).opacity(0.10).font("Times-Bold").fontSize(38)
+          .rotate(-32, { origin: [297, 421] })
+          .text(clean(d.watermarkText, 32), 55, 390, { width: 480, align: "center" });
+        doc.restore();
+        doc.x = savedX;
+        doc.y = savedY;
+      };
+      doc.on("pageAdded", mark);
+      mark();
+    }
     const photoMatch=d.documentType==="cv" && typeof d.photoDataUrl==="string" && d.photoDataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
     const samplePhoto = watermark && d.documentType === "cv" && !photoMatch;
     if(photoMatch){try{const photoBuffer=Buffer.from(photoMatch[2],"base64");if(photoBuffer.length<5*1024*1024)doc.image(photoBuffer,455,48,{fit:[78,78]});}catch{}}
