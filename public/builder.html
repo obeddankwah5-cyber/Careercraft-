@@ -29,6 +29,71 @@
 .paper[data-layout="9"] h2{color:var(--template-accent)}
 .template-sample-photo{width:84px;height:84px;float:right;margin:0 0 12px 16px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#e9d5ff,#fbcfe8);color:#56328b;font:800 24px Manrope;border:4px solid #fff;box-shadow:0 2px 10px #30204420}
 .cv-record-table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0 14px}.cv-record-table th,.cv-record-table td{padding:7px 6px;border-bottom:1px solid #e8e8ef;text-align:left}.cv-record-table th{color:var(--template-accent);font-weight:800}
+
+/* Professional builder layout refresh */
+:root{--builder-ink:#17243a;--builder-muted:#667085;--builder-line:#e6eaf0;--builder-accent:#3157a4}
+body{background:#f5f7fb;color:var(--builder-ink)}
+.site-header{height:76px;padding:0 max(5%,calc((100% - 1240px)/2));box-shadow:0 2px 14px #182b4809}
+.wrap{max-width:1240px;margin:0 auto;padding:42px 28px 76px}
+.wrap>.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:30px;background:#eaf0fb;color:#3157a4;letter-spacing:1.35px}
+.wrap>h1{font-size:clamp(30px,4vw,42px)!important;line-height:1.12!important;letter-spacing:-1.5px;margin:15px 0 8px!important;color:#17243a}
+.wrap>h1 em{color:#3157a4!important}
+.wrap>p{font-size:14px!important;color:#667085!important;margin:0 0 26px}
+.panel{border:1px solid #e5e9f0;border-radius:14px;padding:24px;background:#fff;box-shadow:0 5px 20px #1b2c4508}
+.wrap>.panel{margin-bottom:16px!important}
+.wrap>.cols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:22px;align-items:start}
+.wrap>.cols>.panel{min-width:0;padding:26px}
+.wrap>.cols>.panel:first-child{display:flex;flex-direction:column;gap:2px}
+.wrap>.cols>.panel:last-child{position:sticky;top:96px;background:#eef2f7;border-color:#e1e6ee;padding:18px}
+.wrap>.cols>.panel:last-child>.eyebrow{display:block;padding:4px 4px 12px;color:#3157a4}
+.wrap>.cols>.panel:last-child>p{font-size:12px!important;line-height:1.65;color:#667085}
+.wrap .panel h2,.wrap .panel h3{color:#17243a}
+.wrap .panel h2{font-size:19px!important;letter-spacing:-.3px}
+.wrap .panel h3{font-size:15px;margin:22px 0 10px;padding-bottom:9px;border-bottom:1px solid #edf0f4}
+.field{margin:0 0 15px}
+.field label{font-size:12px;color:#344054;font-weight:700;letter-spacing:.05px;margin-bottom:7px}
+.field input:not([type=checkbox]):not([type=file]),.field textarea,.field select,.wrap select{width:100%;min-height:44px;padding:11px 13px;border:1px solid #d9e0e9;border-radius:8px;background:#fff;color:#1d2939;font:500 13px "DM Sans",sans-serif;outline:none;transition:border-color .18s,box-shadow .18s}
+.field textarea{min-height:100px;line-height:1.6;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus,.wrap select:focus{border-color:#6688c8;box-shadow:0 0 0 3px #3157a415}
+.field input[type=file]{width:100%;border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc;padding:12px;font-size:12px}
+.field small,.wrap .panel small{font-size:11px;line-height:1.6}
+.wrap .panel .eyebrow{font-size:9px;letter-spacing:1.5px;color:#5876ac}
+#scanPanel{margin:20px 0!important;padding:20px!important;border:1px solid #dbe4f1!important;border-radius:12px!important;background:#f8faff!important;box-shadow:none}
+#scanPanel h3{border:0;padding:0;margin:6px 0 8px;font-size:16px!important}
+#scanPanel .btn{min-height:42px;border-radius:8px;padding:12px 15px;font-size:11px}
+#scanPanel .btn-primary{background:#3157a4;box-shadow:none}
+#scanPanel .btn-quiet{background:#fff;border:1px solid #d5deeb}
+#scanPanel .field{margin:14px 0 10px}
+#scanPanel textarea{background:#fff}
+#generate,#pay{min-height:48px;border-radius:9px;font-size:12px;letter-spacing:.1px}
+#generate{background:#3157a4;box-shadow:0 6px 14px #3157a425}
+#pay{background:#17243a;box-shadow:none}
+#previewPdf{min-height:46px!important;background:#fff!important;border:1px solid #d9e0e9!important;color:#3157a4!important;border-radius:9px!important;padding:13px 14px!important}
+#paperPreview{min-height:680px;padding:38px 34px;background:#fff;border:1px solid #e2e7ef;box-shadow:0 14px 38px #17243a16;border-radius:3px;max-width:100%;margin:0 auto;overflow-wrap:anywhere}
+#paperPreview h2{font-size:22px;color:#17243a;letter-spacing:-.5px}
+#paperPreview h4{font-size:11px;color:#3157a4;letter-spacing:1px;text-transform:uppercase}
+#paperPreview p{font-size:11px;color:#475467;line-height:1.7}
+#paperPreview #pvContact{font-size:10px;color:#667085}
+.wrap>.cols>.panel:last-child>p{margin:12px 2px 2px}
+#error{margin:10px 0 0}
+@media(max-width:850px){
+ .wrap{padding:30px 18px 55px}
+ .wrap>.cols{grid-template-columns:1fr}
+ .wrap>.cols>.panel:last-child{position:static;order:2}
+ #paperPreview{min-height:540px}
+}
+@media(max-width:560px){
+ .site-header{height:66px;padding:0 16px}
+ .main-nav{top:66px}
+ .wrap{padding:25px 13px 42px}
+ .wrap>.panel{padding:18px}
+ .wrap>.cols>.panel{padding:18px}
+ .wrap>h1{font-size:31px!important}
+ #paperPreview{padding:26px 20px;min-height:460px}
+ #scanPanel{padding:15px!important}
+ #scanPanel>div:nth-of-type(2){display:grid!important;grid-template-columns:1fr}
+}
+
 </style></head><body><header class="site-header"><a class="brand" href="/"><span class="brand-icon">C</span><span>Career<span>Craft</span><small>DOCUMENT STUDIO</small></span></a><nav class="main-nav"><a href="/">Home</a><a href="/templates.html">Templates</a><a href="/pricing.html">Pricing</a><a href="/help.html">Help</a></nav></header><main class="wrap"><span class="eyebrow">YOUR DOCUMENT WORKSPACE</span><h1 style="font:800 38px Manrope">Build it. <em style="color:#824ce0">See it. Own it.</em></h1><p style="color:#766e84">Choose a design first, then fill in your details.</p><section class="panel" style="margin-bottom:20px"><span class="eyebrow">STEP 1</span><h2 style="font:800 21px Manrope;margin:5px 0 14px">Choose your template</h2><div class="field"><label>Document type</label><select id="type"><option value="cv">CV / Resume</option><option value="letter">Application letter</option><option value="tenancy">Tenancy agreement</option></select></div><div class="field"><label>Choose a design <a href="/templates.html" target="_blank" style="float:right;color:#7544dc">View all 60 designs ↗</a></label><select id="templateSelect"><option value="cv-01">01 · Classic Professional</option><option value="cv-02">02 · Modern Sidebar</option><option value="cv-03">03 · Elegant Executive</option><option value="cv-04">04 · Minimal Clean</option><option value="cv-05">05 · Creative Profile</option><option value="cv-06">06 · Academic Focus</option><option value="cv-07">07 · Corporate Bold</option><option value="cv-08">08 · Graduate Starter</option><option value="cv-09">09 · Professional Compact</option><option value="cv-10">10 · Contemporary</option><option value="cv-11">11 · Technical Specialist</option><option value="cv-12">12 · Healthcare Professional</option><option value="cv-13">13 · Finance Executive</option><option value="cv-14">14 · Marketing Creative</option><option value="cv-15">15 · Two Column Modern</option><option value="cv-16">16 · Clean Monochrome</option><option value="cv-17">17 · Navy Executive</option><option value="cv-18">18 · Plain Standard CV</option><option value="cv-19">19 · Simple Text CV</option><option value="cv-20">20 · Traditional No-Design CV</option></select></div></section><section class="panel" style="margin:0 0 20px"><span class="eyebrow">DOCUMENT APPEARANCE</span><h2 style="font:800 20px Manrope;margin:5px 0 14px">Customise your document</h2><div class="cols"><div class="field"><label>Page colour</label><select id="pageTheme"><option value="plain">Plain white</option><option value="navy">Classic navy</option><option value="green">Forest green</option><option value="burgundy">Burgundy</option><option value="charcoal">Charcoal</option><option value="sand">Warm neutral</option><option value="purple">Soft purple</option></select></div><div class="field"><label>Body font size</label><select id="fontSize"><option value="10">10 pt</option><option value="11">11 pt</option><option value="12" selected>12 pt (recommended)</option><option value="13">13 pt</option><option value="14">14 pt</option></select></div><div class="field"><label>Subheading size</label><select id="headingSize"><option value="12">12 pt</option><option value="13">13 pt</option><option value="14" selected>14 pt (recommended)</option><option value="15">15 pt</option><option value="16">16 pt</option></select></div><div class="field"><label>Optional background watermark</label><label style="display:flex;align-items:center;gap:9px;font-weight:500"><input id="watermarkEnabled" type="checkbox" style="width:auto"> Add watermark to document</label><input id="watermarkText" value="CAREERCRAFT" maxlength="32" placeholder="Watermark text" style="margin-top:8px"></div></div><small style="color:#766e84">All documents use Times New Roman by default. You can change the sizes and page colour before generating your PDF.</small></section><div class="cols"><section class="panel"><span class="eyebrow">STEP 2</span><h2 style="font:800 21px Manrope;margin:5px 0 14px">Fill your template</h2><div class="field"><label>Full name</label><input id="fullName" placeholder="Your full name"></div><div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div><div class="field"><label>Phone</label><input id="phone" placeholder="+233..."></div><div class="field" id="photoField"><label>Profile picture <span style="font-weight:400;color:#8a8098">(optional)</span></label><input id="photo" type="file" accept="image/jpeg,image/png"><small style="display:block;color:#8a8098;margin-top:7px;line-height:1.5">Choose a clear JPG or PNG photo, or leave this empty to create your document without a picture.</small><button type="button" id="removePhoto" class="btn btn-quiet" style="margin-top:9px;padding:9px 12px">Remove picture</button></div><section class="panel" id="scanPanel" style="margin:18px 0;padding:18px;background:linear-gradient(135deg,#faf7ff,#fff)">
 <div class="eyebrow">NEW · CAMERA DOCUMENT SCANNER</div>
 <h3 style="font:800 18px Manrope;margin:6px 0">Turn a paper document into an editable draft</h3>
