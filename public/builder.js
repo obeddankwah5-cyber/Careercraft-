@@ -146,4 +146,109 @@ $("previewPdf").onclick=async()=>{
 };
 
 $("pay").onclick=async()=>{if(!v("fullName")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("email"))){$("error").textContent="Enter your name and a valid email address.";return}let d=Object.fromEntries(ids.map(id=>[id,v(id)]));Object.assign(d,appearance());d.documentType=$("type").value;d.template=template;d.photoDataUrl=photoDataUrl;let b=$("pay");b.disabled=true;b.textContent="Connecting to Paystack…";try{let r=await fetch("/api/payments/initialize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await r.json();if(!r.ok)throw Error(j.error||"Payment could not start");location.href=j.authorization_url}catch(e){$("error").textContent=e.message;b.disabled=false;b.textContent="Continue to checkout · GH₵10 →"}};
+
+/* Camera capture + multi-page OCR document import */
+let scannedDocumentText = "";
+function scanSetStatus(message){ const el=$("scanProgress"); if(el) el.textContent=message; }
+function scanFilesChanged(input){
+  const files=Array.from(input.files||[]);
+  if(files.length>10){scanSetStatus("Please select no more than 10 pages at a time.");input.value="";return}
+  const tooLarge=files.find(file=>file.size>8*1024*1024);
+  if(tooLarge){scanSetStatus("Each page must be smaller than 8 MB. Please choose smaller images.");input.value="";return}
+  const names=files.map((file,i)=>(i+1)+". "+file.name).join(" · ");
+  $("scanFiles").textContent=files.length?files.length+" page(s) selected: "+names:"No pages selected. Up to 10 image pages per scan.";
+  if(files.length) runDocumentOCR(files);
+}
+async function runDocumentOCR(files){
+  const apply=$("applyScan");
+  apply.disabled=true;
+  scannedDocumentText="";
+  $("scanText").value="";
+  if(!window.Tesseract){scanSetStatus("The text-reading service could not load. Check your internet connection and refresh the page.");return}
+  let combined="";
+  try{
+    for(let i=0;i<files.length;i++){
+      scanSetStatus("Reading page "+(i+1)+" of "+files.length+"…");
+      const result=await window.Tesseract.recognize(files[i],"eng",{
+        logger:message=>{
+          if(message.status==="recognizing text"){
+            const pct=Math.round((message.progress||0)*100);
+            scanSetStatus("Reading page "+(i+1)+" of "+files.length+" · "+pct+"%");
+          }
+        }
+      });
+      const pageText=String(result.data.text||"").trim();
+      if(pageText) combined+=(combined?"\n\n":"")+"--- PAGE "+(i+1)+" ---\n"+pageText;
+    }
+    scannedDocumentText=combined.trim();
+    $("scanText").value=scannedDocumentText;
+    apply.disabled=!scannedDocumentText;
+    scanSetStatus(scannedDocumentText?"Finished reading "+files.length+" page(s). Review the text, then use the extracted details.":"No readable text found. Try a brighter, sharper photo with the page flat.");
+  }catch(error){
+    scanSetStatus("Could not read this image. Try a clear JPG or PNG photo. "+(error.message||""));
+  }
+}
+function applyScannedText(){
+  const text=String($("scanText").value||"").trim();
+  if(!text){scanSetStatus("There is no recognised text to use yet.");return}
+  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!/^--- PAGE \d+ ---$/.test(x));
+  const email=(text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)||[])[0];
+  const phone=(text.match(/(?:\+?\d[\d\s().-]{7,}\d)/)||[])[0];
+  const headingPatterns=[
+    ["summary",/^(professional\s+)?(profile|summary|objective|personal statement)$/i],
+    ["experience",/^(work\s+)?(experience|employment history|career history|professional experience)$/i],
+    ["education",/^(education|academic background|qualifications|educational background)$/i],
+    ["skills",/^(key )?skills|competencies|core strengths$/i],
+    ["references",/^references?$/i],
+    ["interests",/^(interests|hobbies|interests and hobbies)$/i]
+  ];
+  const sections={};let active="";
+  for(const line of lines){
+    const match=headingPatterns.find(([,pattern])=>pattern.test(line.replace(/[:：]$/,"")));
+    if(match){active=match[0];if(!sections[active])sections[active]=[];continue}
+    if(active)sections[active].push(line);
+  }
+  const setIfUseful=(id,value)=>{
+    const el=$(id);const cleaned=String(value||"").trim();
+    if(el&&cleaned&&!v(id))el.value=cleaned;
+  };
+  setIfUseful("email",email);
+  setIfUseful("phone",phone);
+  if(!v("fullName")){
+    const candidate=lines.find(line=>line.length>3&&line.length<65&&!/@|\d{3,}|curriculum vitae|resume|résumé/i.test(line)&&!headingPatterns.some(([,p])=>p.test(line.replace(/[:：]$/,""))));
+    if(candidate) $("fullName").value=candidate.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ.' -]+$/g,"").trim();
+  }
+  const joined=key=>(sections[key]||[]).join("\n").trim();
+  if(typeKey()==="cv"){
+    setIfUseful("summary",joined("summary"));
+    setIfUseful("experience",joined("experience"));
+    setIfUseful("education",joined("education"));
+    setIfUseful("skills",joined("skills"));
+    setIfUseful("references",joined("references"));
+    setIfUseful("interests",joined("interests"));
+    if(!v("summary")&&!v("experience")&&!v("education")&&!v("skills")){
+      const useful=lines.filter(line=>line!==v("fullName")&&line!==email&&line!==phone).join("\n");
+      setIfUseful("summary",useful);
+    }
+  }else if(typeKey()==="letter"){
+    setIfUseful("body",text);
+    const subjectLine=lines.find(line=>/^subject\s*:/i.test(line));
+    if(subjectLine&&!v("subject"))$("subject").value=subjectLine.replace(/^subject\s*:/i,"").trim();
+  }else{
+    setIfUseful("terms",text);
+    const landlord=lines.find(line=>/^landlord\s*:/i.test(line));
+    const tenant=lines.find(line=>/^tenant\s*:/i.test(line));
+    if(landlord&&!v("landlord"))$("landlord").value=landlord.replace(/^landlord\s*:/i,"").trim();
+    if(tenant&&!v("tenant"))$("tenant").value=tenant.replace(/^tenant\s*:/i,"").trim();
+  }
+  $("error").textContent="";
+  render();
+  scanSetStatus("Details transferred. CareerCraft has prepared your document draft. Check every field, correct any OCR mistakes, then preview it.");
+  $("generate").textContent="Generate my document ✨";
+  if(typeKey()==="cv"&&(!v("summary")||!v("skills"))) generateDocument();
+}
+$("scanCamera")?.addEventListener("change",event=>scanFilesChanged(event.target));
+$("scanGallery")?.addEventListener("change",event=>scanFilesChanged(event.target));
+$("applyScan")?.addEventListener("click",applyScannedText);
+
 render();
