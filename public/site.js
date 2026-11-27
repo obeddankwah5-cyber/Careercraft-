@@ -6,7 +6,7 @@ if(introSplash){
  const finishIntro=()=>{introSplash.classList.add("is-leaving");window.setTimeout(()=>introSplash.remove(),800)};
  document.getElementById("introSkip")?.addEventListener("click",finishIntro);
  const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
- window.setTimeout(finishIntro,reducedMotion?1200:15000);
+ window.setTimeout(finishIntro,reducedMotion?1200:10000);
 }
 
 
@@ -57,3 +57,13 @@ if("IntersectionObserver" in window){
    el.addEventListener("pointerleave",()=>{el.style.transform="";});
  });
 })();
+
+
+/* Keep brand motion polished and reveal the page in clear, staggered sections. */
+document.querySelectorAll(".feature-ribbon-grid article").forEach((el,i)=>{
+ el.style.animationDelay=(i*100)+"ms";
+ el.classList.add("reveal");
+});
+document.querySelectorAll(".cinematic-videos video").forEach(video=>{
+ video.addEventListener("error",()=>{video.style.display="none";});
+});
