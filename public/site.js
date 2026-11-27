@@ -38,3 +38,22 @@ if("IntersectionObserver" in window){
     observer.observe(el);
   });
 }
+
+
+/* Pointer-driven 3D tilt: subtle on desktop, disabled for touch/reduced motion. */
+(()=> {
+ const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const fine=window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+ if(reduce||!fine)return;
+ const targets=document.querySelectorAll(".service-card,.video-card,.hero-stage,.card");
+ targets.forEach(el=>{
+   el.addEventListener("pointermove",event=>{
+     const r=el.getBoundingClientRect();
+     const x=(event.clientX-r.left)/r.width;
+     const y=(event.clientY-r.top)/r.height;
+     const ry=(x-.5)*9, rx=(.5-y)*7;
+     el.style.transform="perspective(950px) rotateX("+rx+"deg) rotateY("+ry+"deg) translateY(-3px)";
+   });
+   el.addEventListener("pointerleave",()=>{el.style.transform="";});
+ });
+})();
