@@ -415,3 +415,11 @@ body:has(.hero) .hero-stage.reveal{transition-delay:.28s}
 @media(max-width:900px){.feature-ribbon-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cinematic-videos .video-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.feature-ribbon{padding:55px 6%}.feature-ribbon-grid{grid-template-columns:1fr 1fr;gap:11px}.feature-ribbon-grid article{padding:17px 14px}.feature-ribbon-grid h3{font-size:13px}.feature-ribbon-grid p{font-size:11px}.cinematic-videos{padding:58px 6%}.cinematic-videos .video-grid{grid-template-columns:1fr;gap:17px}.cinematic-videos .video-frame{aspect-ratio:16/9}.brand-icon{width:42px;height:42px}}
 @media(prefers-reduced-motion:reduce){.brand-icon,.brand-icon svg,.brand-name,.intro-brand-symbol,.intro-brand-symbol svg,.intro-writing-hand,.intro-lettering text{animation:none!important}.brand-icon:before{display:none}.intro-lettering text{opacity:1}}
+
+
+/* Restore the explicit welcome message and sync the intro timer. */
+.intro-welcome-title{display:block;margin:28px 0 0;color:#fff;font:800 clamp(20px,4vw,30px) Manrope,Arial,sans-serif;letter-spacing:2.2px;text-align:center;text-shadow:0 5px 24px #0005;opacity:0;animation:introFadeUp .8s 6.1s forwards}
+.intro-tagline{display:block;opacity:0;animation:introFadeUp .8s 6.6s forwards}
+.intro-progress span{animation:introProgress 10s linear forwards}
+@media(max-width:600px){.intro-welcome-title{font-size:18px;letter-spacing:1.4px;margin-top:20px}.intro-tagline{font-size:8px;letter-spacing:1.5px}}
+@media(prefers-reduced-motion:reduce){.intro-welcome-title,.intro-tagline{opacity:1;animation:none}}
