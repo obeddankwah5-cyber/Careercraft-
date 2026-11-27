@@ -319,3 +319,42 @@ body:has(.hero) .hero-stage.reveal{transition-delay:.28s}
  body:has(.hero) .cta-section{margin:28px 5%;padding:35px 7%}
 }
 @media(prefers-reduced-motion:reduce){body:has(.hero) .mock-doc{animation:none!important}body:has(.hero) .reveal{filter:none!important;transform:none!important}}
+
+
+/* CareerCraft: tactile 3D depth and calmer page rhythm */
+.hero{perspective:1400px;isolation:isolate}
+.hero-stage{perspective:1200px;transform-style:preserve-3d}
+.hero-stage .mock-doc{transform:rotateY(-13deg) rotateX(5deg) rotateZ(-5deg);transform-style:preserve-3d;box-shadow:24px 30px 65px #34205238,-8px -8px 20px #ffffffaa}
+.hero-stage .mock-doc:before{content:"";position:absolute;inset:0 0 0 auto;width:8px;background:linear-gradient(90deg,#eeeaf5,#fff);transform:translateZ(-3px)}
+.hero-stage .mini-doc{transform-style:preserve-3d;box-shadow:0 25px 55px #39245a2a}
+.hero-stage .mini-left{transform:translateZ(-45px) rotateY(17deg) rotateZ(9deg) translate(-67px,12px)}
+.hero-stage .mini-right{transform:translateZ(-65px) rotateY(-18deg) rotateZ(12deg) translate(80px,15px)}
+.floating-chip{transform:translateZ(75px)}
+.service-card,.video-card,.gallery-paper,.template-stage{transform-style:preserve-3d;perspective:1000px}
+.service-card{will-change:transform}
+.service-card:focus-within{outline:2px solid #bba4ee;outline-offset:3px}
+.section{padding-top:clamp(64px,8vw,104px);padding-bottom:clamp(64px,8vw,104px)}
+.section-heading{margin-bottom:clamp(30px,4vw,52px)}
+.service-grid,.video-grid{gap:clamp(18px,2.4vw,30px)}
+.showcase{padding-top:clamp(65px,8vw,100px);padding-bottom:clamp(65px,8vw,100px)}
+.steps-band{padding-top:clamp(60px,7vw,90px);padding-bottom:clamp(60px,7vw,90px)}
+.cta-section{margin-top:clamp(45px,6vw,78px);margin-bottom:clamp(45px,6vw,78px)}
+/* Separate document-builder stages visually instead of one dense form */
+.wrap{max-width:1160px}
+.wrap>.panel{margin-bottom:28px!important;padding:clamp(20px,3vw,30px)!important}
+.wrap>.cols{gap:clamp(20px,3vw,34px)}
+.wrap>.cols>.panel:first-child{gap:10px}
+.wrap>.cols>.panel:first-child>.eyebrow{margin-top:12px}
+.wrap>.cols>.panel:first-child>h2{margin-bottom:18px!important}
+.wrap .field{margin:0 0 19px}
+.wrap .field label{line-height:1.5}
+#scanPanel{margin:25px 0 30px!important;padding:clamp(17px,2.5vw,25px)!important}
+#cv h3,#letter h3,#tenancy h3{margin:30px 0 16px;padding:12px 15px;border-left:4px solid #7a55cf;border-radius:0 9px 9px 0;background:#f4f0fc;color:#35205c}
+#generate,#pay,#previewPdf{margin-top:12px!important;margin-bottom:16px!important}
+@media(max-width:700px){
+ .hero-stage .mock-doc{transform:rotateY(-9deg) rotateX(3deg) rotateZ(-5deg)}
+ .section,.video-section{padding-top:58px;padding-bottom:58px}
+ .wrap>.panel{margin-bottom:20px!important}
+ .wrap .field{margin-bottom:17px}
+}
+@media(prefers-reduced-motion:reduce){.hero-stage .mock-doc,.hero-stage .mini-left,.hero-stage .mini-right{transform:none!important}}
